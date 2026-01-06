@@ -1,0 +1,8 @@
+{
+  "name": "cropguard-ai",
+  "version": "0.1.0",
+  "description": "Initial setup for CropGuard AI project",
+  "scripts": {
+    "start": "echo \"Project initialized\""
+  }
+}
