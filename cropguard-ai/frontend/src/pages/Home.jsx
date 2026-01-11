@@ -1,74 +1,43 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 function Home() {
   const navigate = useNavigate();
-  const [panel, setPanel] = useState(null);
-  const profile = JSON.parse(localStorage.getItem("farmerProfile"));
-
-  const logout = () => {
-    localStorage.removeItem("farmerProfile");
-    navigate("/");
-  };
 
   return (
     <div style={styles.app}>
       <header style={styles.header}>
         <div style={styles.brand}>
-          <img src={logo} style={styles.logo} />
+          <img src={logo} alt="CropGuard AI" style={styles.logo} />
           <h2 style={styles.logoText}>CropGuard AI</h2>
         </div>
 
-        <nav style={styles.nav}>
-          {["Home", "Upload", "Alerts", "Dashboard", "About"].map((i) => (
-            <span key={i} onClick={() => setPanel(i)}>
-              {i}
-            </span>
-          ))}
-          <span onClick={() => setPanel("Profile")}>Profile</span>
-          <span onClick={logout}>Logout</span>
+        <nav>
+          <ul style={styles.navList}>
+            <li>Home</li>
+            <li>Upload</li>
+            <li>Alerts</li>
+            <li>Dashboard</li>
+            <li>Profile</li>
+            <li>Logout</li>
+          </ul>
         </nav>
       </header>
 
-      {panel && (
-        <div style={styles.dropdown}>
-          {panel === "Upload" && (
-            <button
-              style={styles.action}
-              onClick={() => navigate("/survey/image-detection")}
-            >
-              Image-Based Detection
-            </button>
-          )}
-
-          {panel === "Profile" && (
-            <div>
-              <p>Name: {profile?.name}</p>
-              <p>Location: {profile?.location}</p>
-              <button
-                style={styles.action}
-                onClick={() => navigate("/")}
-              >
-                Edit Profile
-              </button>
-            </div>
-          )}
-
-          {panel !== "Upload" && panel !== "Profile" && (
-            <p>{panel} information panel</p>
-          )}
-        </div>
-      )}
-
       <main style={styles.main}>
         <div style={styles.card}>
-          <h1>Smart Crop Disease Detection</h1>
+          <h1 style={styles.heading}>Smart Crop Disease Detection</h1>
 
           <div style={styles.features}>
-            <div style={styles.feature}>Image-Based Detection</div>
-            <div style={styles.feature}>Disease Analytics</div>
-            <div style={styles.feature}>Risk Assessment</div>
+            <div style={styles.feature} onClick={() => navigate("/upload")}>
+              Image-Based Detection
+            </div>
+
+            <div style={styles.feature} onClick={() => navigate("/disease-analysis")}>
+              Disease Analysis
+            </div>
+
+            <div style={styles.feature}>Early Alerts</div>
             <div style={styles.feature}>Treatment Guidance</div>
           </div>
         </div>
@@ -78,53 +47,40 @@ function Home() {
 }
 
 const styles = {
-  app: { minHeight: "100vh", background: "#f4f6f8" },
+  app: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
   header: {
-    background: "#142C52",
-    padding: "14px 32px",
+    backgroundColor: "#142C52",
     color: "#fff",
+    padding: "14px 32px",
     display: "flex",
     justifyContent: "space-between",
   },
   brand: { display: "flex", alignItems: "center", gap: "10px" },
-  logo: { height: "36px", background: "#fff", padding: "5px", borderRadius: "6px" },
+  logo: { height: "36px", background: "#fff", padding: "6px", borderRadius: "6px" },
   logoText: { color: "#1B9AAA" },
-  nav: { display: "flex", gap: "20px", cursor: "pointer" },
-  dropdown: {
-    background: "#fff",
-    padding: "30px",
-    margin: "20px auto",
-    width: "80%",
-    borderRadius: "16px",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
-  },
-  action: {
-    padding: "10px 16px",
-    background: "#1B9AAA",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    marginTop: "10px",
-  },
-  main: { display: "flex", justifyContent: "center", padding: "80px" },
+  navList: { display: "flex", gap: "18px", listStyle: "none" },
+  main: { padding: "80px", display: "flex", justifyContent: "center" },
   card: {
     background: "#fff",
     padding: "50px",
-    borderRadius: "16px",
-    boxShadow: "0 15px 40px rgba(0,0,0,0.08)",
-    textAlign: "center",
+    borderRadius: "18px",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+    width: "900px",
   },
+  heading: { color: "#142C52", textAlign: "center" },
   features: {
-    marginTop: "30px",
+    marginTop: "40px",
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
     gap: "20px",
   },
   feature: {
-    background: "#1B9AAA",
+    backgroundColor: "#1B9AAA",
     color: "#fff",
-    padding: "20px",
+    padding: "18px",
     borderRadius: "12px",
+    textAlign: "center",
+    cursor: "pointer",
   },
 };
 

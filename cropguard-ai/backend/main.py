@@ -10,9 +10,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"status": "CropGuard AI backend running"}
+
 @app.post("/api/analyze")
 async def analyze(image: UploadFile = File(...)):
     return {
-        "status": "received",
-        "filename": image.filename
+        "analysis": {
+            "disease": "Leaf Blight",
+            "severity": "High",
+            "confidence": 0.88,
+            "recommendation": "Apply fungicide immediately and avoid excess irrigation"
+        }
     }
