@@ -26,9 +26,16 @@ function Home() {
             <li style={styles.navItem} onClick={() => setShowAlerts(true)}>
               Alerts
             </li>
-            <li style={styles.navItem}>Dashboard</li>
-            <li style={styles.navItem}>Profile</li>
-            <li style={styles.navItem}>Logout</li>
+            <li style={styles.navItem} onClick={() => navigate("/dashboard")}>
+              Dashboard
+            </li>
+
+            <li style={styles.navItem} onClick={() => navigate("/profile")}>
+              Profile
+            </li>
+            <li style={styles.navItem} onClick={() => navigate("/logout")}>
+              Logout
+            </li>
           </ul>
         </nav>
       </header>
