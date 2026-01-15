@@ -10,31 +10,55 @@ function ImageUpload() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("image", file);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
 
-    const res = await fetch("http://127.0.0.1:5000/api/analyze", {
-      method: "POST",
-      body: formData,
-    });
+      // ---- CALL BACKEND ----
+      const res = await fetch("http://127.0.0.1:5000/api/analyze", {
+        method: "POST",
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    const preview = URL.createObjectURL(file);
+      // ---- IMAGE PREVIEW ----
+      const preview = URL.createObjectURL(file);
 
-    localStorage.setItem(
-      "lastAnalysis",
-      JSON.stringify({
+      const analysisRecord = {
+        id: Date.now(),
+        date: new Date().toLocaleString(),
         imagePreview: preview,
         analysis: data.analysis,
-      })
-    );
+      };
 
-    setSuccess(true);
+      // ---- SAVE LAST ANALYSIS ----
+      localStorage.setItem(
+        "lastAnalysis",
+        JSON.stringify(analysisRecord)
+      );
 
-    setTimeout(() => {
-      navigate("/home");
-    }, 1500);
+      // ---- SAVE HISTORY ----
+      const history =
+        JSON.parse(localStorage.getItem("analysisHistory")) || [];
+
+      history.push(analysisRecord);
+
+      localStorage.setItem(
+        "analysisHistory",
+        JSON.stringify(history)
+      );
+
+      // ---- SUCCESS ----
+      setSuccess(true);
+
+      setTimeout(() => {
+        navigate("/home");
+      }, 1500);
+
+    } catch (error) {
+      console.error("Upload failed:", error);
+    }
   };
 
   return (
@@ -59,12 +83,13 @@ function ImageUpload() {
               accept="image/*"
               onChange={handleUpload}
               style={{ display: "none" }}
+              disabled={success}
             />
           </label>
 
           {success && (
             <div style={styles.success}>
-              Image uploaded successfully
+              Image uploaded successfully. Redirecting to Home...
             </div>
           )}
         </div>
@@ -125,7 +150,10 @@ const styles = {
   },
   success: {
     marginTop: "20px",
-    color: "#22C55E",
+    backgroundColor: "#E6F6F8",
+    color: "#16808D",
+    padding: "12px",
+    borderRadius: "10px",
     fontWeight: "600",
   },
 };
