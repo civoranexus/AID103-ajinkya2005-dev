@@ -2,173 +2,239 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
-const crops = {
-  Cereals: ["Rice", "Wheat", "Maize"],
-  Pulses: ["Chickpea", "Lentil"],
+const cropOptions = {
+  Cereals: ["Wheat", "Rice", "Maize", "Barley"],
+  Pulses: ["Chickpea", "Lentil", "Pigeon Pea"],
   "Cash Crops": ["Sugarcane", "Cotton"],
-  Oilseeds: ["Soybean", "Groundnut"],
+  Oilseeds: ["Soybean", "Groundnut", "Sunflower"],
+  Fruits: ["Mango", "Banana", "Grapes"],
+  Vegetables: ["Tomato", "Potato", "Onion"],
+  Spices: ["Chilli", "Turmeric", "Ginger"],
 };
 
 function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: "",
+
+  const [formData, setFormData] = useState({
+    fullName: "",
     location: "",
     cropCategory: "",
-    cropName: "",
+    cropType: "",
     cropInfo: "",
-    plantingDate: "",
+    plantationDate: "",
   });
 
-  const progress =
-    (form.name ? 20 : 0) +
-    (form.location ? 20 : 0) +
-    (form.cropCategory ? 20 : 0) +
-    (form.cropName ? 20 : 0) +
-    (form.plantingDate ? 20 : 0);
+  const totalFields = Object.keys(formData).length;
+  const filledFields = Object.values(formData).filter(
+    (v) => v.trim() !== ""
+  ).length;
+  const progress = Math.round((filledFields / totalFields) * 100);
+  const isComplete = progress === 100;
 
-  const submit = () => {
-    localStorage.setItem("farmerProfile", JSON.stringify(form));
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = () => {
+    if (!isComplete) return;
+    localStorage.setItem("farmerProfile", JSON.stringify(formData));
     navigate("/home");
   };
 
   return (
     <div style={styles.page}>
+      {/* HEADER */}
       <header style={styles.header}>
         <div style={styles.brand}>
-          <img src={logo} style={styles.logo} />
-          <span>CropGuard AI</span>
+          <img src={logo} alt="CropGuard AI" style={styles.logo} />
+          <h2 style={styles.brandText}>CropGuard AI</h2>
         </div>
       </header>
 
-      <div style={styles.card}>
-        <div style={styles.progressWrap}>
-          <div style={{ ...styles.progress, width: `${progress}%` }} />
-        </div>
+      {/* FORM */}
+      <div style={styles.center}>
+        <div style={styles.card}>
+          <h2 style={styles.heading}>Farmer Registration</h2>
 
-        <h2 style={styles.title}>Welcome to CropGuard AI</h2>
+          {/* PROGRESS BAR */}
+          <div style={styles.progressTrack}>
+            <div
+              style={{ ...styles.progressFill, width: `${progress}%` }}
+            />
+          </div>
+          <p style={styles.progressText}>{progress}% completed</p>
 
-        <input
-          style={styles.input}
-          placeholder="Full Name"
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-
-        <input
-          style={styles.input}
-          placeholder="Farm Location"
-          onChange={(e) => setForm({ ...form, location: e.target.value })}
-        />
-
-        <select
-          style={styles.input}
-          onChange={(e) =>
-            setForm({ ...form, cropCategory: e.target.value, cropName: "" })
-          }
-        >
-          <option value="">Select Crop Category</option>
-          {Object.keys(crops).map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-
-        {form.cropCategory && (
-          <select
+          <input
+            name="fullName"
+            placeholder="Farmer Name"
+            value={formData.fullName}
+            onChange={handleChange}
             style={styles.input}
+          />
+
+          <input
+            name="location"
+            placeholder="Farm Location"
+            value={formData.location}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
+          {/* CROP CATEGORY */}
+          <select
+            name="cropCategory"
+            value={formData.cropCategory}
             onChange={(e) =>
-              setForm({ ...form, cropName: e.target.value })
+              setFormData({
+                ...formData,
+                cropCategory: e.target.value,
+                cropType: "",
+              })
             }
+            style={styles.input}
           >
-            <option value="">Select Crop</option>
-            {crops[form.cropCategory].map((c) => (
-              <option key={c}>{c}</option>
+            <option value="">Select Crop Category</option>
+            {Object.keys(cropOptions).map((cat) => (
+              <option key={cat}>{cat}</option>
             ))}
           </select>
-        )}
 
-        <textarea
-          style={styles.input}
-          placeholder="Additional crop information"
-          rows="3"
-          onChange={(e) => setForm({ ...form, cropInfo: e.target.value })}
-        />
+          {/* CROP TYPE */}
+          {formData.cropCategory && (
+            <select
+              name="cropType"
+              value={formData.cropType}
+              onChange={handleChange}
+              style={styles.input}
+            >
+              <option value="">Select Crop Type</option>
+              {cropOptions[formData.cropCategory].map((crop) => (
+                <option key={crop}>{crop}</option>
+              ))}
+            </select>
+          )}
 
-        <input
-          type="date"
-          style={styles.input}
-          onChange={(e) =>
-            setForm({ ...form, plantingDate: e.target.value })
-          }
-        />
+          {/* ADDITIONAL INFO */}
+          {formData.cropType && (
+            <textarea
+              name="cropInfo"
+              placeholder="Additional crop information (variety, irrigation, soil type)"
+              value={formData.cropInfo}
+              onChange={handleChange}
+              style={styles.textarea}
+            />
+          )}
 
-        <button
-          disabled={progress !== 100}
-          style={{
-            ...styles.button,
-            backgroundColor: progress === 100 ? "#1B9AAA" : "#9CA3AF",
-          }}
-          onClick={submit}
-        >
-          Register
-        </button>
+          {/* PLANTATION DATE */}
+          <input
+            type="date"
+            name="plantationDate"
+            value={formData.plantationDate}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
+          <button
+            disabled={!isComplete}
+            onClick={handleRegister}
+            style={{
+              ...styles.button,
+              opacity: isComplete ? 1 : 0.5,
+              cursor: isComplete ? "pointer" : "not-allowed",
+            }}
+          >
+            Register & Continue
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
+/* ---------- STYLES ---------- */
+
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "#f4f6f8",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    backgroundColor: "#f4f6f8",
   },
   header: {
-    width: "100%",
-    background: "#142C52",
+    backgroundColor: "#142C52",
     padding: "14px 32px",
+  },
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  logo: {
+    height: "36px",
+    backgroundColor: "#ffffff",
+    padding: "6px",
+    borderRadius: "8px",
+  },
+  brandText: {
     color: "#1B9AAA",
+    margin: 0,
   },
-  brand: { display: "flex", alignItems: "center", gap: "10px" },
-  logo: { height: "32px", background: "#fff", padding: "4px", borderRadius: "6px" },
+  center: {
+    display: "flex",
+    justifyContent: "center",
+    paddingTop: "70px",
+  },
   card: {
-    marginTop: "60px",
-    width: "460px",
+    backgroundColor: "#ffffff",
     padding: "40px",
-    background: "#fff",
-    borderRadius: "16px",
-    boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
+    borderRadius: "18px",
+    width: "460px",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
   },
-  progressWrap: {
-    height: "8px",
-    background: "#e5e7eb",
-    borderRadius: "6px",
-    marginBottom: "20px",
-  },
-  progress: {
-    height: "100%",
-    background: "#22C55E",
-  },
-  title: {
+  heading: {
     textAlign: "center",
-    marginBottom: "20px",
     color: "#142C52",
+    marginBottom: "20px",
+  },
+  progressTrack: {
+    height: "8px",
+    backgroundColor: "#e0e0e0",
+    borderRadius: "6px",
+    overflow: "hidden",
+    marginBottom: "6px",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#22C55E",
+    transition: "width 0.3s",
+  },
+  progressText: {
+    fontSize: "13px",
+    color: "#16808D",
+    marginBottom: "16px",
+    textAlign: "right",
   },
   input: {
     width: "100%",
     padding: "12px",
     marginBottom: "14px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: "1px solid #ccc",
-    fontSize: "14px",
+  },
+  textarea: {
+    width: "100%",
+    padding: "12px",
+    marginBottom: "14px",
+    borderRadius: "10px",
+    border: "1px solid #ccc",
+    minHeight: "70px",
+    resize: "none",
   },
   button: {
     width: "100%",
     padding: "14px",
+    backgroundColor: "#1B9AAA",
+    color: "#ffffff",
     border: "none",
-    borderRadius: "10px",
-    color: "#fff",
+    borderRadius: "12px",
     fontWeight: "600",
   },
 };
