@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
+
 function Home() {
   const navigate = useNavigate();
+
 
   return (
     <div style={styles.app}>

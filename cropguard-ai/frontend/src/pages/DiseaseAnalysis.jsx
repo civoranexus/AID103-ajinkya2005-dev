@@ -14,62 +14,16 @@ function DiseaseAnalysis() {
   }
 
   const { imagePreview, analysis } = stored;
-  const { disease, severity, confidence, recommendation } = analysis;
-
-  // -------- SMART TREATMENT LOGIC --------
-  const treatmentPlan = {
-    immediate:
-      severity === "High"
-        ? [
-            "Apply recommended fungicide immediately",
-            "Isolate affected crop sections",
-            "Avoid overhead irrigation",
-          ]
-        : severity === "Medium"
-        ? [
-            "Apply preventive spray",
-            "Monitor crop condition daily",
-          ]
-        : [
-            "No chemical treatment required",
-            "Continue regular monitoring",
-          ],
-
-    shortTerm: [
-      "Inspect crops every 3–4 days",
-      "Maintain proper field sanitation",
-      "Track disease progression",
-    ],
-
-    preventive: [
-      "Ensure proper crop spacing",
-      "Avoid excess moisture retention",
-      "Use disease-resistant seed varieties next cycle",
-    ],
-  };
-
-  // -------- EXPLAINABLE AI (MOCK) --------
-  const explainableAI = {
-    visual: [
-      "Irregular leaf spot patterns detected",
-      "Discoloration near leaf edges",
-      "Texture inconsistency across affected areas",
-    ],
-    environmental: [
-      "High humidity during early crop stage",
-      "Excess soil moisture retention",
-      "Limited air circulation between plants",
-    ],
-    cropStage: [
-      "Crop in early vegetative stage",
-      "High susceptibility to fungal infection",
-    ],
-    confidenceReason: [
-      "Clear visual patterns matched training data",
-      "Environmental conditions strongly favor disease",
-      "High similarity with known disease cases",
-    ],
-  };
+  const {
+    disease,
+    severity,
+    confidence,
+    recommendation,
+    risk_level,
+    action_priority,
+    key_risk_factors,
+    decision_explanation,
+  } = analysis;
 
   return (
     <div style={styles.page}>
@@ -86,12 +40,14 @@ function DiseaseAnalysis() {
         <div style={styles.card}>
           <h2 style={styles.heading}>Disease Analysis</h2>
 
-          <img src={imagePreview} style={styles.image} />
+          <img src={imagePreview} alt="Crop" style={styles.image} />
 
           <div style={styles.details}>
             <p><strong>Disease:</strong> {disease}</p>
             <p><strong>Severity:</strong> {severity}</p>
             <p><strong>Confidence:</strong> {confidence * 100}%</p>
+            <p><strong>Risk Level:</strong> {risk_level}</p>
+            <p><strong>Action Priority:</strong> {action_priority}</p>
           </div>
 
           <div style={styles.recommendation}>
@@ -100,7 +56,9 @@ function DiseaseAnalysis() {
 
           {/* WHY OPTION */}
           <div style={styles.whyRow}>
-            <span style={styles.whyText}>Why was this disease detected?</span>
+            <span style={styles.whyText}>
+              Why was this disease detected?
+            </span>
             <button
               style={styles.whyButton}
               onClick={() => setShowExplain(true)}
@@ -119,34 +77,11 @@ function DiseaseAnalysis() {
             </h3>
 
             {showActions && (
-              <>
-                <div style={styles.actionBlock}>
-                  <h4>Immediate Actions</h4>
-                  <ul>
-                    {treatmentPlan.immediate.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div style={styles.actionBlock}>
-                  <h4>Short-Term Actions</h4>
-                  <ul>
-                    {treatmentPlan.shortTerm.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div style={styles.actionBlock}>
-                  <h4>Preventive Measures</h4>
-                  <ul>
-                    {treatmentPlan.preventive.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </>
+              <div style={styles.actionBlock}>
+                <ul>
+                  <li>{recommendation}</li>
+                </ul>
+              </div>
             )}
           </div>
 
@@ -160,40 +95,24 @@ function DiseaseAnalysis() {
       {showExplain && (
         <div style={styles.overlay}>
           <div style={styles.explainCard}>
-            <h3 style={styles.explainHeading}>Explainable AI – Why?</h3>
+            <h3 style={styles.explainHeading}>
+              Explainable AI – Decision Reasoning
+            </h3>
 
             <section>
-              <h4>Visual Indicators</h4>
+              <h4>Key Risk Factors</h4>
               <ul>
-                {explainableAI.visual.map((v, i) => (
-                  <li key={i}>{v}</li>
+                {key_risk_factors.map((item, idx) => (
+                  <li key={idx}>{item}</li>
                 ))}
               </ul>
             </section>
 
             <section>
-              <h4>Environmental Factors</h4>
+              <h4>Decision Explanation</h4>
               <ul>
-                {explainableAI.environmental.map((e, i) => (
-                  <li key={i}>{e}</li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h4>Crop Stage Sensitivity</h4>
-              <ul>
-                {explainableAI.cropStage.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h4>Confidence Explanation</h4>
-              <ul>
-                {explainableAI.confidenceReason.map((c, i) => (
-                  <li key={i}>{c}</li>
+                {decision_explanation.map((item, idx) => (
+                  <li key={idx}>{item}</li>
                 ))}
               </ul>
             </section>
@@ -294,7 +213,6 @@ const styles = {
     marginBottom: "12px",
   },
   actionBlock: {
-    marginBottom: "12px",
     color: "#142C52",
   },
   button: {
