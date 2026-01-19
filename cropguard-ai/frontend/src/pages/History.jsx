@@ -12,9 +12,15 @@ function History() {
     setHistory(stored.reverse());
   }, []);
 
+  const getColor = (level) =>
+    level === "High"
+      ? "#DC2626"
+      : level === "Medium"
+      ? "#F59E0B"
+      : "#16A34A";
+
   const exportPDF = async (item) => {
     const element = document.getElementById(`report-${item.id}`);
-
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
 
@@ -44,39 +50,77 @@ function History() {
           <p style={styles.empty}>No analysis history available.</p>
         )}
 
-        {history.map((item) => (
-          <div key={item.id} style={styles.card}>
-            <div id={`report-${item.id}`} style={styles.report}>
-              <h3 style={styles.cardTitle}>Crop Disease Report</h3>
+        {history.map((item) => {
+          const color = getColor(item.analysis.risk_level);
 
-              <p><strong>Date:</strong> {item.date}</p>
+          return (
+            <div key={item.id} style={styles.card}>
+              <div id={`report-${item.id}`} style={styles.report}>
+                <h3 style={styles.cardTitle}>Crop Disease Report</h3>
 
-              <img
-                src={item.imagePreview}
-                alt="Crop"
-                style={styles.image}
-              />
+                {/* VISUAL INDICATORS */}
+                <div style={styles.indicatorRow}>
+                  <span
+                    style={{
+                      ...styles.riskBadge,
+                      backgroundColor: color,
+                    }}
+                  >
+                    Risk: {item.analysis.risk_level}
+                  </span>
 
-              <p><strong>Disease:</strong> {item.analysis.disease}</p>
-              <p><strong>Severity:</strong> {item.analysis.severity}</p>
-              <p>
-                <strong>Confidence:</strong>{" "}
-                {item.analysis.confidence * 100}%
-              </p>
+                  <span
+                    style={{
+                      ...styles.severity,
+                      color: color,
+                    }}
+                  >
+                    Severity: {item.analysis.severity}
+                  </span>
+                </div>
 
-              <div style={styles.recommendation}>
-                {item.analysis.recommendation}
+                <p><strong>Date:</strong> {item.date}</p>
+
+                <img
+                  src={item.imagePreview}
+                  alt="Crop"
+                  style={styles.image}
+                />
+
+                <p><strong>Disease:</strong> {item.analysis.disease}</p>
+
+                {/* CONFIDENCE BAR */}
+                <div style={styles.confidenceBlock}>
+                  <span>
+                    <strong>Confidence:</strong>{" "}
+                    {Math.round(item.analysis.confidence * 100)}%
+                  </span>
+
+                  <div style={styles.track}>
+                    <div
+                      style={{
+                        ...styles.fill,
+                        width: `${item.analysis.confidence * 100}%`,
+                        backgroundColor: color,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={styles.recommendation}>
+                  {item.analysis.recommendation}
+                </div>
               </div>
-            </div>
 
-            <button
-              style={styles.exportBtn}
-              onClick={() => exportPDF(item)}
-            >
-              Export PDF
-            </button>
-          </div>
-        ))}
+              <button
+                style={styles.exportBtn}
+                onClick={() => exportPDF(item)}
+              >
+                Export PDF
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -129,12 +173,47 @@ const styles = {
   cardTitle: {
     marginBottom: "10px",
   },
+
+  /* === VISUAL INDICATORS === */
+  indicatorRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+  riskBadge: {
+    color: "#ffffff",
+    padding: "4px 12px",
+    borderRadius: "16px",
+    fontSize: "12px",
+    fontWeight: "600",
+  },
+  severity: {
+    fontWeight: "600",
+  },
+
   image: {
     width: "100%",
     maxWidth: "300px",
     borderRadius: "12px",
     margin: "12px 0",
   },
+
+  confidenceBlock: {
+    marginTop: "10px",
+  },
+  track: {
+    height: "8px",
+    backgroundColor: "#e5e7eb",
+    borderRadius: "6px",
+    overflow: "hidden",
+    marginTop: "4px",
+  },
+  fill: {
+    height: "100%",
+    transition: "width 0.3s",
+  },
+
   recommendation: {
     marginTop: "10px",
     backgroundColor: "#E6F6F8",

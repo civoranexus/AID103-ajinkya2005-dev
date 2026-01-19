@@ -9,9 +9,7 @@ function DiseaseAnalysis() {
   const [showActions, setShowActions] = useState(true);
   const [showExplain, setShowExplain] = useState(false);
 
-  if (!stored) {
-    return null;
-  }
+  if (!stored) return null;
 
   const { imagePreview, analysis } = stored;
   const {
@@ -24,6 +22,23 @@ function DiseaseAnalysis() {
     key_risk_factors,
     decision_explanation,
   } = analysis;
+
+  // ---------- VISUAL HELPERS (ADDITION ONLY) ----------
+  const riskColor =
+    risk_level === "High"
+      ? "#DC2626"
+      : risk_level === "Medium"
+      ? "#F59E0B"
+      : "#16A34A";
+
+  const severityColor =
+    severity === "High"
+      ? "#DC2626"
+      : severity === "Medium"
+      ? "#F59E0B"
+      : "#16A34A";
+
+  // ---------------------------------------------------
 
   return (
     <div style={styles.page}>
@@ -42,11 +57,37 @@ function DiseaseAnalysis() {
 
           <img src={imagePreview} alt="Crop" style={styles.image} />
 
+          {/* ===== VISUAL INDICATORS START ===== */}
+
+          <div style={styles.badgeRow}>
+            <span style={{ ...styles.riskBadge, backgroundColor: riskColor }}>
+              Risk Level: {risk_level}
+            </span>
+
+            <span style={{ ...styles.severityText, color: severityColor }}>
+              Severity: {severity}
+            </span>
+          </div>
+
+          <div style={styles.confidenceWrapper}>
+            <div style={styles.confidenceLabel}>
+              AI Confidence: {Math.round(confidence * 100)}%
+            </div>
+            <div style={styles.confidenceTrack}>
+              <div
+                style={{
+                  ...styles.confidenceFill,
+                  width: `${confidence * 100}%`,
+                  backgroundColor: severityColor,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* ===== VISUAL INDICATORS END ===== */}
+
           <div style={styles.details}>
             <p><strong>Disease:</strong> {disease}</p>
-            <p><strong>Severity:</strong> {severity}</p>
-            <p><strong>Confidence:</strong> {confidence * 100}%</p>
-            <p><strong>Risk Level:</strong> {risk_level}</p>
             <p><strong>Action Priority:</strong> {action_priority}</p>
           </div>
 
@@ -130,35 +171,21 @@ function DiseaseAnalysis() {
   );
 }
 
+/* ---------- STYLES (ONLY ADDITIVE) ---------- */
+
 const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
-  },
-  header: {
-    backgroundColor: "#142C52",
-    padding: "14px 32px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
+  page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
+  header: { backgroundColor: "#142C52", padding: "14px 32px" },
+  brand: { display: "flex", alignItems: "center", gap: "12px" },
   logo: {
     height: "36px",
     backgroundColor: "#ffffff",
     padding: "6px",
     borderRadius: "8px",
   },
-  brandText: {
-    color: "#1B9AAA",
-    margin: 0,
-  },
-  center: {
-    display: "flex",
-    justifyContent: "center",
-    paddingTop: "80px",
-  },
+  brandText: { color: "#1B9AAA", margin: 0 },
+
+  center: { display: "flex", justifyContent: "center", paddingTop: "80px" },
   card: {
     backgroundColor: "#ffffff",
     padding: "40px",
@@ -174,11 +201,46 @@ const styles = {
   image: {
     width: "100%",
     borderRadius: "12px",
+    marginBottom: "18px",
+  },
+
+  badgeRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "14px",
+  },
+  riskBadge: {
+    color: "#ffffff",
+    padding: "6px 12px",
+    borderRadius: "20px",
+    fontSize: "13px",
+    fontWeight: "600",
+  },
+  severityText: {
+    fontWeight: "600",
+  },
+
+  confidenceWrapper: {
     marginBottom: "16px",
   },
-  details: {
+  confidenceLabel: {
+    fontSize: "13px",
+    marginBottom: "6px",
     color: "#142C52",
   },
+  confidenceTrack: {
+    height: "8px",
+    backgroundColor: "#e5e7eb",
+    borderRadius: "6px",
+    overflow: "hidden",
+  },
+  confidenceFill: {
+    height: "100%",
+    transition: "width 0.4s ease",
+  },
+
+  details: { color: "#142C52", marginBottom: "12px" },
   recommendation: {
     backgroundColor: "#E6F6F8",
     color: "#16808D",
@@ -186,16 +248,14 @@ const styles = {
     borderRadius: "12px",
     marginBottom: "16px",
   },
+
   whyRow: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: "20px",
   },
-  whyText: {
-    color: "#142C52",
-    fontWeight: "500",
-  },
+  whyText: { fontWeight: "500", color: "#142C52" },
   whyButton: {
     backgroundColor: "#1B9AAA",
     color: "#ffffff",
@@ -204,17 +264,15 @@ const styles = {
     padding: "6px 14px",
     cursor: "pointer",
   },
-  actionSection: {
-    marginTop: "10px",
-  },
+
+  actionSection: { marginTop: "10px" },
   actionHeading: {
     color: "#1B9AAA",
     cursor: "pointer",
     marginBottom: "12px",
   },
-  actionBlock: {
-    color: "#142C52",
-  },
+  actionBlock: { color: "#142C52" },
+
   button: {
     marginTop: "20px",
     width: "100%",
@@ -225,6 +283,7 @@ const styles = {
     borderRadius: "12px",
     cursor: "pointer",
   },
+
   overlay: {
     position: "fixed",
     inset: 0,
@@ -241,10 +300,7 @@ const styles = {
     maxHeight: "80vh",
     overflowY: "auto",
   },
-  explainHeading: {
-    color: "#142C52",
-    marginBottom: "16px",
-  },
+  explainHeading: { color: "#142C52", marginBottom: "16px" },
   closeButton: {
     marginTop: "20px",
     width: "100%",
