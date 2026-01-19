@@ -3,7 +3,6 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
 
-// If you were using Recharts earlier, keep these imports
 import {
   BarChart,
   Bar,
@@ -23,14 +22,19 @@ function Dashboard() {
     }
   }, []);
 
-  // ---- MOCK CHART DATA (already existed in your version) ----
   const chartData = [
     { name: "Low", value: 4 },
     { name: "Medium", value: 6 },
     { name: "High", value: 2 },
   ];
 
-  // ---- PDF EXPORT ----
+  const getColor = (level) =>
+    level === "High"
+      ? "#DC2626"
+      : level === "Medium"
+      ? "#F59E0B"
+      : "#16A34A";
+
   const downloadPDF = async () => {
     const element = document.getElementById("dashboard-export");
     if (!element) return;
@@ -46,9 +50,12 @@ function Dashboard() {
     pdf.save("CropGuard_Dashboard_Report.pdf");
   };
 
+  const severityColor = analysis
+    ? getColor(analysis.analysis.risk_level)
+    : "#16A34A";
+
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -59,7 +66,7 @@ function Dashboard() {
       <div style={styles.container}>
         <h2 style={styles.heading}>Dashboard Overview</h2>
 
-        {/* ===== EXISTING OVERVIEW CARDS ===== */}
+        {/* OVERVIEW CARDS */}
         <div style={styles.cards}>
           <div style={styles.card}>
             <h4>Total Analyses</h4>
@@ -75,7 +82,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* ===== EXISTING CHART ===== */}
+        {/* CHART */}
         <div style={styles.chartCard}>
           <h4>Disease Severity Distribution</h4>
           <ResponsiveContainer width="100%" height={300}>
@@ -88,11 +95,32 @@ function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* ===== EXPORT SECTION (NEW, AT BOTTOM) ===== */}
+        {/* EXPORT + VISUAL INDICATORS */}
         {analysis && (
           <div style={styles.exportSection}>
             <div style={styles.exportCard} id="dashboard-export">
               <h3>Latest Analysis Summary</h3>
+
+              {/* VISUAL INDICATORS */}
+              <div style={styles.indicatorRow}>
+                <span
+                  style={{
+                    ...styles.riskBadge,
+                    backgroundColor: severityColor,
+                  }}
+                >
+                  Risk: {analysis.analysis.risk_level}
+                </span>
+
+                <span
+                  style={{
+                    ...styles.severityText,
+                    color: severityColor,
+                  }}
+                >
+                  Severity: {analysis.analysis.severity}
+                </span>
+              </div>
 
               <img
                 src={analysis.imagePreview}
@@ -100,19 +128,38 @@ function Dashboard() {
                 style={styles.image}
               />
 
-              <p><strong>Disease:</strong> {analysis.analysis.disease}</p>
-              <p><strong>Severity:</strong> {analysis.analysis.severity}</p>
               <p>
-                <strong>Confidence:</strong>{" "}
-                {analysis.analysis.confidence * 100}%
+                <strong>Disease:</strong>{" "}
+                {analysis.analysis.disease}
               </p>
+
+              {/* CONFIDENCE BAR */}
+              <div style={styles.confidenceBlock}>
+                <span>
+                  <strong>Confidence:</strong>{" "}
+                  {Math.round(analysis.analysis.confidence * 100)}%
+                </span>
+
+                <div style={styles.track}>
+                  <div
+                    style={{
+                      ...styles.fill,
+                      width: `${analysis.analysis.confidence * 100}%`,
+                      backgroundColor: severityColor,
+                    }}
+                  />
+                </div>
+              </div>
 
               <div style={styles.recommendation}>
                 {analysis.analysis.recommendation}
               </div>
             </div>
 
-            <button style={styles.downloadBtn} onClick={downloadPDF}>
+            <button
+              style={styles.downloadBtn}
+              onClick={downloadPDF}
+            >
               Download Latest Report (PDF)
             </button>
           </div>
@@ -173,6 +220,7 @@ const styles = {
     boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
     marginBottom: "50px",
   },
+
   exportSection: {
     marginTop: "40px",
   },
@@ -183,6 +231,38 @@ const styles = {
     boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
     maxWidth: "600px",
   },
+
+  /* VISUAL INDICATORS */
+  indicatorRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "10px",
+  },
+  riskBadge: {
+    color: "#ffffff",
+    padding: "4px 12px",
+    borderRadius: "16px",
+    fontSize: "12px",
+    fontWeight: "600",
+  },
+  severityText: {
+    fontWeight: "600",
+  },
+  confidenceBlock: {
+    marginTop: "10px",
+  },
+  track: {
+    height: "8px",
+    backgroundColor: "#e5e7eb",
+    borderRadius: "6px",
+    overflow: "hidden",
+    marginTop: "4px",
+  },
+  fill: {
+    height: "100%",
+    transition: "width 0.3s",
+  },
+
   image: {
     width: "100%",
     maxWidth: "320px",
