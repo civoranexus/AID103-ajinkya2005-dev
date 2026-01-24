@@ -23,7 +23,7 @@ function DiseaseAnalysis() {
     decision_explanation,
   } = analysis;
 
-  /* ---------- VISUAL HELPERS ---------- */
+  
   const riskColor =
     risk_level === "High"
       ? "#DC2626"
@@ -38,7 +38,7 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  /* ---------- RISK FORECAST (NEW) ---------- */
+  
   let forecastRisk = "Low";
   let forecastColor = "#16A34A";
   let forecastMessage =
@@ -58,7 +58,7 @@ function DiseaseAnalysis() {
 
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
+      
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -66,14 +66,14 @@ function DiseaseAnalysis() {
         </div>
       </header>
 
-      {/* CONTENT */}
+    
       <div style={styles.center}>
         <div style={styles.card}>
           <h2 style={styles.heading}>Disease Analysis</h2>
 
           <img src={imagePreview} alt="Crop" style={styles.image} />
 
-          {/* VISUAL INDICATORS */}
+          
           <div style={styles.badgeRow}>
             <span style={{ ...styles.riskBadge, backgroundColor: riskColor }}>
               Risk Level: {risk_level}
@@ -99,7 +99,7 @@ function DiseaseAnalysis() {
             </div>
           </div>
 
-          {/* DETAILS */}
+          
           <div style={styles.details}>
             <p><strong>Disease:</strong> {disease}</p>
             <p><strong>Action Priority:</strong> {action_priority}</p>
@@ -109,7 +109,7 @@ function DiseaseAnalysis() {
             {recommendation}
           </div>
 
-          {/* ===== RISK FORECAST (NEW) ===== */}
+          
           <div
             style={{
               backgroundColor: "#ffffff",
@@ -133,7 +133,7 @@ function DiseaseAnalysis() {
             </p>
           </div>
 
-          {/* WHY OPTION */}
+          
           <div style={styles.whyRow}>
             <span style={styles.whyText}>
               Why was this disease detected?
@@ -146,7 +146,7 @@ function DiseaseAnalysis() {
             </button>
           </div>
 
-          {/* SMART TREATMENT */}
+        
           <div style={styles.actionSection}>
             <h3
               style={styles.actionHeading}
@@ -170,7 +170,7 @@ function DiseaseAnalysis() {
         </div>
       </div>
 
-      {/* EXPLAINABLE AI */}
+      
       {showExplain && (
         <div style={styles.overlay}>
           <div style={styles.explainCard}>
@@ -209,7 +209,7 @@ function DiseaseAnalysis() {
   );
 }
 
-/* ---------- STYLES ---------- */
+
 
 const styles = {
   page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
