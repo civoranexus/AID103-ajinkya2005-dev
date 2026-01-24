@@ -23,7 +23,7 @@ function DiseaseAnalysis() {
     decision_explanation,
   } = analysis;
 
-  // ---------- VISUAL HELPERS (ADDITION ONLY) ----------
+  /* ---------- VISUAL HELPERS ---------- */
   const riskColor =
     risk_level === "High"
       ? "#DC2626"
@@ -38,7 +38,23 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  // ---------------------------------------------------
+  /* ---------- RISK FORECAST (NEW) ---------- */
+  let forecastRisk = "Low";
+  let forecastColor = "#16A34A";
+  let forecastMessage =
+    "Disease risk is expected to remain low over the next 14 days.";
+
+  if (severity === "High" && confidence >= 0.75) {
+    forecastRisk = "High";
+    forecastColor = "#DC2626";
+    forecastMessage =
+      "High probability of disease progression in the next 7–14 days without immediate intervention.";
+  } else if (severity === "Medium") {
+    forecastRisk = "Moderate";
+    forecastColor = "#F59E0B";
+    forecastMessage =
+      "Moderate risk detected. Close monitoring and preventive actions are advised.";
+  }
 
   return (
     <div style={styles.page}>
@@ -57,8 +73,7 @@ function DiseaseAnalysis() {
 
           <img src={imagePreview} alt="Crop" style={styles.image} />
 
-          {/* ===== VISUAL INDICATORS START ===== */}
-
+          {/* VISUAL INDICATORS */}
           <div style={styles.badgeRow}>
             <span style={{ ...styles.riskBadge, backgroundColor: riskColor }}>
               Risk Level: {risk_level}
@@ -84,8 +99,7 @@ function DiseaseAnalysis() {
             </div>
           </div>
 
-          {/* ===== VISUAL INDICATORS END ===== */}
-
+          {/* DETAILS */}
           <div style={styles.details}>
             <p><strong>Disease:</strong> {disease}</p>
             <p><strong>Action Priority:</strong> {action_priority}</p>
@@ -93,6 +107,30 @@ function DiseaseAnalysis() {
 
           <div style={styles.recommendation}>
             {recommendation}
+          </div>
+
+          {/* ===== RISK FORECAST (NEW) ===== */}
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              padding: "16px",
+              borderRadius: "14px",
+              marginBottom: "20px",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+              borderLeft: `6px solid ${forecastColor}`,
+            }}
+          >
+            <h4 style={{ color: "#142C52", marginBottom: "6px" }}>
+              Risk Forecast (Next 14 Days)
+            </h4>
+
+            <p style={{ fontWeight: "600", color: forecastColor }}>
+              Forecasted Risk Level: {forecastRisk}
+            </p>
+
+            <p style={{ color: "#142C52", marginTop: "6px" }}>
+              {forecastMessage}
+            </p>
           </div>
 
           {/* WHY OPTION */}
@@ -132,7 +170,7 @@ function DiseaseAnalysis() {
         </div>
       </div>
 
-      {/* EXPLAINABLE AI OVERLAY */}
+      {/* EXPLAINABLE AI */}
       {showExplain && (
         <div style={styles.overlay}>
           <div style={styles.explainCard}>
@@ -171,7 +209,7 @@ function DiseaseAnalysis() {
   );
 }
 
-/* ---------- STYLES (ONLY ADDITIVE) ---------- */
+/* ---------- STYLES ---------- */
 
 const styles = {
   page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
@@ -207,7 +245,6 @@ const styles = {
   badgeRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "14px",
   },
   riskBadge: {
@@ -217,28 +254,17 @@ const styles = {
     fontSize: "13px",
     fontWeight: "600",
   },
-  severityText: {
-    fontWeight: "600",
-  },
+  severityText: { fontWeight: "600" },
 
-  confidenceWrapper: {
-    marginBottom: "16px",
-  },
-  confidenceLabel: {
-    fontSize: "13px",
-    marginBottom: "6px",
-    color: "#142C52",
-  },
+  confidenceWrapper: { marginBottom: "16px" },
+  confidenceLabel: { fontSize: "13px", marginBottom: "6px" },
   confidenceTrack: {
     height: "8px",
     backgroundColor: "#e5e7eb",
     borderRadius: "6px",
     overflow: "hidden",
   },
-  confidenceFill: {
-    height: "100%",
-    transition: "width 0.4s ease",
-  },
+  confidenceFill: { height: "100%" },
 
   details: { color: "#142C52", marginBottom: "12px" },
   recommendation: {
@@ -252,7 +278,6 @@ const styles = {
   whyRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "20px",
   },
   whyText: { fontWeight: "500", color: "#142C52" },
@@ -265,12 +290,7 @@ const styles = {
     cursor: "pointer",
   },
 
-  actionSection: { marginTop: "10px" },
-  actionHeading: {
-    color: "#1B9AAA",
-    cursor: "pointer",
-    marginBottom: "12px",
-  },
+  actionHeading: { color: "#1B9AAA", cursor: "pointer" },
   actionBlock: { color: "#142C52" },
 
   button: {
@@ -297,10 +317,8 @@ const styles = {
     padding: "36px",
     borderRadius: "18px",
     width: "480px",
-    maxHeight: "80vh",
-    overflowY: "auto",
   },
-  explainHeading: { color: "#142C52", marginBottom: "16px" },
+  explainHeading: { color: "#142C52" },
   closeButton: {
     marginTop: "20px",
     width: "100%",
