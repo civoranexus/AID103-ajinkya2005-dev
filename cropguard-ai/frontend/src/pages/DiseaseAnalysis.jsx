@@ -5,6 +5,8 @@ import logo from "../assets/logo.png";
 function DiseaseAnalysis() {
   const navigate = useNavigate();
   const stored = JSON.parse(localStorage.getItem("lastAnalysis"));
+  const history =
+    JSON.parse(localStorage.getItem("analysisHistory")) || [];
 
   const [showActions, setShowActions] = useState(true);
   const [showExplain, setShowExplain] = useState(false);
@@ -23,7 +25,9 @@ function DiseaseAnalysis() {
     decision_explanation,
   } = analysis;
 
-  // ---------- VISUAL HELPERS (ADDITION ONLY) ----------
+  /* ===============================
+     VISUAL HELPERS (EXISTING)
+  =============================== */
   const riskColor =
     risk_level === "High"
       ? "#DC2626"
@@ -38,7 +42,35 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  // ---------------------------------------------------
+  /* ===============================
+     LEARNING BEHAVIOUR – STEP 1
+  =============================== */
+  const sameDiseaseCount = history.filter(
+    (item) => item.analysis?.disease === disease
+  ).length;
+
+  let learningLevel = "Info";
+  let learningMessage =
+    "This is the first recorded occurrence of this disease.";
+
+  if (sameDiseaseCount >= 2 && sameDiseaseCount <= 3) {
+    learningLevel = "Warning";
+    learningMessage =
+      "Repeated occurrences detected. AI is learning a recurring disease pattern based on past analyses.";
+  } else if (sameDiseaseCount >= 4) {
+    learningLevel = "Critical";
+    learningMessage =
+      "Critical recurring pattern detected. AI has escalated risk using historical disease trends.";
+  }
+
+  const learningColor =
+    learningLevel === "Critical"
+      ? "#DC2626"
+      : learningLevel === "Warning"
+      ? "#F59E0B"
+      : "#16A34A";
+
+  /* =============================== */
 
   return (
     <div style={styles.page}>
@@ -50,21 +82,29 @@ function DiseaseAnalysis() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div style={styles.center}>
         <div style={styles.card}>
           <h2 style={styles.heading}>Disease Analysis</h2>
 
           <img src={imagePreview} alt="Crop" style={styles.image} />
 
-          {/* ===== VISUAL INDICATORS START ===== */}
-
+          {/* VISUAL INDICATORS */}
           <div style={styles.badgeRow}>
-            <span style={{ ...styles.riskBadge, backgroundColor: riskColor }}>
+            <span
+              style={{
+                ...styles.riskBadge,
+                backgroundColor: riskColor,
+              }}
+            >
               Risk Level: {risk_level}
             </span>
 
-            <span style={{ ...styles.severityText, color: severityColor }}>
+            <span
+              style={{
+                ...styles.severityText,
+                color: severityColor,
+              }}
+            >
               Severity: {severity}
             </span>
           </div>
@@ -84,8 +124,6 @@ function DiseaseAnalysis() {
             </div>
           </div>
 
-          {/* ===== VISUAL INDICATORS END ===== */}
-
           <div style={styles.details}>
             <p><strong>Disease:</strong> {disease}</p>
             <p><strong>Action Priority:</strong> {action_priority}</p>
@@ -93,6 +131,19 @@ function DiseaseAnalysis() {
 
           <div style={styles.recommendation}>
             {recommendation}
+          </div>
+
+          {/* ===== LEARNING INSIGHT (NEW) ===== */}
+          <div
+            style={{
+              ...styles.learningBox,
+              borderLeft: `6px solid ${learningColor}`,
+            }}
+          >
+            <strong>AI Learning Insight</strong>
+            <p style={{ marginTop: "6px" }}>
+              {learningMessage}
+            </p>
           </div>
 
           {/* WHY OPTION */}
@@ -171,7 +222,7 @@ function DiseaseAnalysis() {
   );
 }
 
-/* ---------- STYLES (ONLY ADDITIVE) ---------- */
+/* ---------- STYLES (ADDITIVE ONLY) ---------- */
 
 const styles = {
   page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
@@ -217,13 +268,9 @@ const styles = {
     fontSize: "13px",
     fontWeight: "600",
   },
-  severityText: {
-    fontWeight: "600",
-  },
+  severityText: { fontWeight: "600" },
 
-  confidenceWrapper: {
-    marginBottom: "16px",
-  },
+  confidenceWrapper: { marginBottom: "16px" },
   confidenceLabel: {
     fontSize: "13px",
     marginBottom: "6px",
@@ -235,10 +282,7 @@ const styles = {
     borderRadius: "6px",
     overflow: "hidden",
   },
-  confidenceFill: {
-    height: "100%",
-    transition: "width 0.4s ease",
-  },
+  confidenceFill: { height: "100%", transition: "width 0.4s ease" },
 
   details: { color: "#142C52", marginBottom: "12px" },
   recommendation: {
@@ -247,6 +291,14 @@ const styles = {
     padding: "14px",
     borderRadius: "12px",
     marginBottom: "16px",
+  },
+
+  learningBox: {
+    backgroundColor: "#F9FAFB",
+    padding: "14px",
+    borderRadius: "10px",
+    marginBottom: "18px",
+    color: "#142C52",
   },
 
   whyRow: {
