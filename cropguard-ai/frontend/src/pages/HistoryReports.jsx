@@ -8,7 +8,7 @@ function HistoryReports() {
 
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
+     
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
