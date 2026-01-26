@@ -5,6 +5,7 @@ import ImageUpload from "./pages/ImageUpload";
 import DiseaseAnalysis from "./pages/DiseaseAnalysis";
 import History from "./pages/History";      
 import Dashboard from "./pages/Dashboard";  
+import PestDetection from "./pages/PestDetection";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/analysis" element={<DiseaseAnalysis />} />
       <Route path="/history" element={<History />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/pest-detection" element={<PestDetection />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
