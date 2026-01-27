@@ -1,14 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
-
 function Home() {
   const navigate = useNavigate();
 
-
   return (
     <div style={styles.app}>
-      {/* NAVBAR */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI Logo" style={styles.logo} />
@@ -21,9 +18,8 @@ function Home() {
               Home
             </li>
             <li style={styles.navItem} onClick={() => navigate("/history")}>
-  History 
-</li>
-
+              History
+            </li>
             <li style={styles.navItem} onClick={() => navigate("/dashboard")}>
               Dashboard
             </li>
@@ -31,7 +27,6 @@ function Home() {
         </nav>
       </header>
 
-      {/* MAIN CONTENT */}
       <main style={styles.main}>
         <div style={styles.card}>
           <h1 style={styles.heading}>Smart Crop Disease Detection</h1>
@@ -53,6 +48,20 @@ function Home() {
               onClick={() => navigate("/analysis")}
             >
               Disease Analysis
+            </button>
+
+            <button
+              style={styles.tertiaryBtn}
+              onClick={() => navigate("/pests")}
+            >
+              Pest Detection
+            </button>
+
+            <button
+              style={styles.storeBtn}
+              onClick={() => navigate("/stores")}
+            >
+              Stores
             </button>
           </div>
         </div>
@@ -129,6 +138,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     gap: "16px",
+    flexWrap: "wrap",
   },
   primaryBtn: {
     padding: "14px 28px",
@@ -142,6 +152,24 @@ const styles = {
   secondaryBtn: {
     padding: "14px 28px",
     backgroundColor: "#16808D",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+  tertiaryBtn: {
+    padding: "14px 28px",
+    backgroundColor: "#142C52",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+  storeBtn: {
+    padding: "14px 28px",
+    backgroundColor: "#0f766e",
     color: "#ffffff",
     border: "none",
     borderRadius: "12px",
