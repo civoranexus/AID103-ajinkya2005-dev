@@ -131,3 +131,13 @@
 </p>
 
 
+
+
+# Intership Start 
+
+---
+
+### Day 1 – Initial Setup and Project Structure
+The project is initialized by creating a structured folder layout for backend, frontend and documentation. Basic placeholder files were added to both backend and frontend to verify the initial setup and establish entry points for further development.
+
+
