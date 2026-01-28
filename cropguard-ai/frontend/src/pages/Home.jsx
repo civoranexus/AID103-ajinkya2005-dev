@@ -20,6 +20,9 @@ function Home() {
             <li style={styles.navItem} onClick={() => navigate("/history")}>
               History
             </li>
+            <li style={styles.navItem} onClick={() => navigate("/calendar")}>
+              Crop Calendar
+            </li>
             <li style={styles.navItem} onClick={() => navigate("/dashboard")}>
               Dashboard
             </li>
