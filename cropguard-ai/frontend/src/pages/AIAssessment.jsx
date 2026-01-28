@@ -18,7 +18,7 @@ function AIAssessment() {
 
   return (
     <div style={styles.page}>
-      {/* HEADER */}
+      
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -29,7 +29,7 @@ function AIAssessment() {
       <div style={styles.container}>
         <h2 style={styles.pageTitle}>AI Crop Health Assessment</h2>
 
-        {/* AI ASSESSMENT SUMMARY */}
+        
         <div style={styles.cardHighlight}>
           <h3 style={styles.sectionTitle}>AI Findings</h3>
           <p><strong>Crop:</strong> {cropType}</p>
@@ -40,7 +40,7 @@ function AIAssessment() {
           <p><strong>Location:</strong> {location}</p>
         </div>
 
-        {/* EXPLAINABLE AI */}
+        
         <div style={styles.card}>
           <div style={styles.rowBetween}>
             <h3 style={styles.sectionTitle}>Explainable AI</h3>
@@ -62,7 +62,7 @@ function AIAssessment() {
           )}
         </div>
 
-        {/* ACTION PLANNER */}
+        
         <div style={styles.card}>
           <h3 style={styles.sectionTitle}>Personalized Action Plan</h3>
 
@@ -94,7 +94,7 @@ function AIAssessment() {
           </div>
         </div>
 
-        {/* GENERAL GUIDELINES */}
+        
         <div style={styles.cardMuted}>
           <h3 style={styles.sectionTitle}>General Crop Care Guidelines (Non-AI)</h3>
           <p>Ensure proper irrigation management.</p>
@@ -102,7 +102,7 @@ function AIAssessment() {
           <p>Regularly inspect crops for early signs of stress.</p>
         </div>
 
-        {/* FOOTER ACTIONS */}
+        
         <div style={styles.footer}>
           <button style={styles.primaryBtn} onClick={() => navigate("/home")}>
             Back to Home

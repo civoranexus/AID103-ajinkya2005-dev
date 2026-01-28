@@ -14,12 +14,15 @@ import {
 
 function Dashboard() {
   const [analysis, setAnalysis] = useState(null);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("lastAnalysis"));
-    if (stored) {
-      setAnalysis(stored);
-    }
+    const storedHistory =
+      JSON.parse(localStorage.getItem("analysisHistory")) || [];
+
+    if (stored) setAnalysis(stored);
+    setHistory(storedHistory);
   }, []);
 
   const chartData = [
@@ -34,6 +37,69 @@ function Dashboard() {
       : level === "Medium"
       ? "#F59E0B"
       : "#16A34A";
+
+  /* ===============================
+     LEARNING SUMMARY LOGIC
+  =============================== */
+  const diseaseFrequency = {};
+  history.forEach((item) => {
+    const d = item.analysis?.disease;
+    if (d) diseaseFrequency[d] = (diseaseFrequency[d] || 0) + 1;
+  });
+
+  const mostFrequentDisease = Object.keys(diseaseFrequency).reduce(
+    (a, b) =>
+      diseaseFrequency[a] > diseaseFrequency[b] ? a : b,
+    ""
+  );
+
+  const recurrenceCount = diseaseFrequency[mostFrequentDisease] || 0;
+
+  let learningLevel = "Normal";
+  if (recurrenceCount >= 2 && recurrenceCount <= 3)
+    learningLevel = "Warning";
+  else if (recurrenceCount >= 4)
+    learningLevel = "Critical";
+
+  const learningColor =
+    learningLevel === "Critical"
+      ? "#DC2626"
+      : learningLevel === "Warning"
+      ? "#F59E0B"
+      : "#16A34A";
+
+  /* ===============================
+     SEVERITY TREND LEARNING (NEW)
+  =============================== */
+  const severityMap = { Low: 1, Medium: 2, High: 3 };
+
+  let severityTrend = "Stable";
+  let severityTrendColor = "#16A34A";
+  let severityTrendMessage =
+    "Disease severity has remained stable over time.";
+
+  if (history.length >= 2) {
+    const first =
+      severityMap[history[0].analysis?.severity] || 1;
+    const last =
+      severityMap[
+        history[history.length - 1].analysis?.severity
+      ] || 1;
+
+    if (last > first) {
+      severityTrend = "Worsening";
+      severityTrendColor = "#DC2626";
+      severityTrendMessage =
+        "Disease severity has increased over successive analyses.";
+    } else if (last < first) {
+      severityTrend = "Improving";
+      severityTrendColor = "#16A34A";
+      severityTrendMessage =
+        "Disease severity is improving based on recent results.";
+    }
+  }
+
+  /* =============================== */
 
   const downloadPDF = async () => {
     const element = document.getElementById("dashboard-export");
@@ -70,15 +136,15 @@ function Dashboard() {
         <div style={styles.cards}>
           <div style={styles.card}>
             <h4>Total Analyses</h4>
-            <p>12</p>
+            <p>{history.length}</p>
           </div>
           <div style={styles.card}>
-            <h4>High Risk Crops</h4>
-            <p>2</p>
+            <h4>Recurring Disease</h4>
+            <p>{mostFrequentDisease || "None"}</p>
           </div>
           <div style={styles.card}>
-            <h4>Active Alerts</h4>
-            <p>3</p>
+            <h4>Learning Status</h4>
+            <p style={{ color: learningColor }}>{learningLevel}</p>
           </div>
         </div>
 
@@ -95,13 +161,46 @@ function Dashboard() {
           </ResponsiveContainer>
         </div>
 
+        {/* AI LEARNING SUMMARY */}
+        {mostFrequentDisease && (
+          <div
+            style={{
+              ...styles.learningCard,
+              borderLeft: `6px solid ${learningColor}`,
+            }}
+          >
+            <h3>AI Learning Summary</h3>
+            <p>
+              <strong>{mostFrequentDisease}</strong> detected{" "}
+              <strong>{recurrenceCount}</strong> times.
+            </p>
+            <p>
+              Learning level:{" "}
+              <strong style={{ color: learningColor }}>
+                {learningLevel}
+              </strong>
+            </p>
+
+            {/* SEVERITY TREND */}
+            <p
+              style={{
+                marginTop: "10px",
+                fontWeight: "600",
+                color: severityTrendColor,
+              }}
+            >
+              Severity Trend: {severityTrend}
+            </p>
+            <p>{severityTrendMessage}</p>
+          </div>
+        )}
+
         {/* EXPORT + VISUAL INDICATORS */}
         {analysis && (
           <div style={styles.exportSection}>
             <div style={styles.exportCard} id="dashboard-export">
               <h3>Latest Analysis Summary</h3>
 
-              {/* VISUAL INDICATORS */}
               <div style={styles.indicatorRow}>
                 <span
                   style={{
@@ -133,18 +232,22 @@ function Dashboard() {
                 {analysis.analysis.disease}
               </p>
 
-              {/* CONFIDENCE BAR */}
               <div style={styles.confidenceBlock}>
                 <span>
                   <strong>Confidence:</strong>{" "}
-                  {Math.round(analysis.analysis.confidence * 100)}%
+                  {Math.round(
+                    analysis.analysis.confidence * 100
+                  )}
+                  %
                 </span>
 
                 <div style={styles.track}>
                   <div
                     style={{
                       ...styles.fill,
-                      width: `${analysis.analysis.confidence * 100}%`,
+                      width: `${
+                        analysis.analysis.confidence * 100
+                      }%`,
                       backgroundColor: severityColor,
                     }}
                   />
@@ -170,36 +273,19 @@ function Dashboard() {
 }
 
 const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
-  },
-  header: {
-    backgroundColor: "#142C52",
-    padding: "14px 32px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
+  page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
+  header: { backgroundColor: "#142C52", padding: "14px 32px" },
+  brand: { display: "flex", alignItems: "center", gap: "12px" },
   logo: {
     height: "36px",
     backgroundColor: "#ffffff",
     padding: "6px",
     borderRadius: "8px",
   },
-  brandText: {
-    color: "#1B9AAA",
-    margin: 0,
-  },
-  container: {
-    padding: "60px 80px",
-  },
-  heading: {
-    color: "#142C52",
-    marginBottom: "30px",
-  },
+  brandText: { color: "#1B9AAA", margin: 0 },
+  container: { padding: "60px 80px" },
+  heading: { color: "#142C52", marginBottom: "30px" },
+
   cards: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
@@ -213,17 +299,25 @@ const styles = {
     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
     color: "#142C52",
   },
+
   chartCard: {
     backgroundColor: "#ffffff",
     padding: "30px",
     borderRadius: "18px",
     boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
-    marginBottom: "50px",
+    marginBottom: "40px",
   },
 
-  exportSection: {
-    marginTop: "40px",
+  learningCard: {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "16px",
+    marginBottom: "40px",
+    boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
+    color: "#142C52",
   },
+
+  exportSection: { marginTop: "40px" },
   exportCard: {
     backgroundColor: "#ffffff",
     padding: "30px",
@@ -232,7 +326,6 @@ const styles = {
     maxWidth: "600px",
   },
 
-  /* VISUAL INDICATORS */
   indicatorRow: {
     display: "flex",
     justifyContent: "space-between",
@@ -245,12 +338,9 @@ const styles = {
     fontSize: "12px",
     fontWeight: "600",
   },
-  severityText: {
-    fontWeight: "600",
-  },
-  confidenceBlock: {
-    marginTop: "10px",
-  },
+  severityText: { fontWeight: "600" },
+
+  confidenceBlock: { marginTop: "10px" },
   track: {
     height: "8px",
     backgroundColor: "#e5e7eb",
@@ -258,10 +348,7 @@ const styles = {
     overflow: "hidden",
     marginTop: "4px",
   },
-  fill: {
-    height: "100%",
-    transition: "width 0.3s",
-  },
+  fill: { height: "100%", transition: "width 0.3s" },
 
   image: {
     width: "100%",
