@@ -4,6 +4,7 @@ import random
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +16,6 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"status": "CropGuard AI backend running"}
-
 
 
 @app.post("/api/analyze")
@@ -79,7 +79,7 @@ async def analyze(image: UploadFile = File(...)):
             "recommendation": recommendation,
             "key_risk_factors": key_risk_factors,
             "decision_explanation": decision_explanation,
-            "ai_version": "v1.2"
+            "ai_version": "v1.3"
         }
     }
 
@@ -88,14 +88,12 @@ async def analyze(image: UploadFile = File(...)):
 @app.get("/api/pest-recommendations")
 def pest_recommendations_info():
     return {
-        "message": "This endpoint requires POST with disease and severity context."
+        "message": "Use POST with disease and severity context."
     }
-
 
 
 @app.post("/api/pest-recommendations")
 async def pest_recommendations(payload: dict):
-
     disease = payload.get("disease")
     severity = payload.get("severity")
 
@@ -144,5 +142,44 @@ async def pest_recommendations(payload: dict):
             "disease": disease,
             "severity": severity
         },
-        "ai_version": "v1.2"
+        "ai_version": "v1.3"
+    }
+
+
+
+@app.post("/api/local-agro-stores")
+async def local_agro_stores(payload: dict):
+    location = payload.get("location", "India")
+    pests = payload.get("pests", [])
+
+    stores = []
+
+    for pest in pests:
+        control = pest.get("control", "").lower()
+
+        if "neem" in control or "organic" in control:
+            stores.append({
+                "store_type": "Organic Agro Store",
+                "recommended_for": pest["name"],
+                "search_link": f"https://www.google.com/maps/search/organic+agro+store+near+{location}"
+            })
+
+        if "insecticide" in control or "pesticide" in control:
+            stores.append({
+                "store_type": "Agro Chemical Store",
+                "recommended_for": pest["name"],
+                "search_link": f"https://www.google.com/maps/search/agro+chemical+store+near+{location}"
+            })
+
+        if "trap" in control:
+            stores.append({
+                "store_type": "Agro Equipment Store",
+                "recommended_for": pest["name"],
+                "search_link": f"https://www.google.com/maps/search/agro+equipment+store+near+{location}"
+            })
+
+    return {
+        "store_suggestions": stores,
+        "location_used": location,
+        "ai_version": "v1.3"
     }

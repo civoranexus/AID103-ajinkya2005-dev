@@ -6,7 +6,6 @@ function Home() {
 
   return (
     <div style={styles.app}>
-  
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI Logo" style={styles.logo} />
@@ -28,7 +27,6 @@ function Home() {
         </nav>
       </header>
 
-    
       <main style={styles.main}>
         <div style={styles.card}>
           <h1 style={styles.heading}>Smart Crop Disease Detection</h1>
@@ -52,12 +50,18 @@ function Home() {
               Disease Analysis
             </button>
 
-            
             <button
-              style={styles.forecastBtn}
-              onClick={() => navigate("/risk-forecast")}
+              style={styles.tertiaryBtn}
+              onClick={() => navigate("/pests")}
             >
-              Weather-Linked Risk Forecast
+              Pest Detection
+            </button>
+
+            <button
+              style={styles.storeBtn}
+              onClick={() => navigate("/stores")}
+            >
+              Stores
             </button>
           </div>
         </div>
@@ -154,11 +158,18 @@ const styles = {
     fontWeight: "600",
     cursor: "pointer",
   },
-
-  
-  forecastBtn: {
+  tertiaryBtn: {
     padding: "14px 28px",
     backgroundColor: "#142C52",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+  storeBtn: {
+    padding: "14px 28px",
+    backgroundColor: "#0f766e",
     color: "#ffffff",
     border: "none",
     borderRadius: "12px",
