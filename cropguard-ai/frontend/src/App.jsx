@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route,Navigate } from "react-router-dom";
 
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -8,6 +8,7 @@ import History from "./pages/History";
 import Dashboard from "./pages/Dashboard";
 import PestDetection from "./pages/PestDetection";
 import LocalAgroStores from "./pages/LocalAgroStores";
+import CropCalendar from "./pages/CropCalendar";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pests" element={<PestDetection />} />
       <Route path="/stores" element={<LocalAgroStores />} />
+      <Route path="/calendar" element={<CropCalendar />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
