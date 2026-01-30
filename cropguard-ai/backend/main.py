@@ -14,11 +14,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+model = models.mobilenet_v2(weights="DEFAULT")
+model.eval()
+
+classes = [
+    "Healthy Leaf",
+    "Leaf Blight",
+    "Powdery Mildew",
+    "Bacterial Spot",
+]
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+])
 
 @app.get("/")
 def root():
-    return {"status": "CropGuard AI backend running"}
-
+    return {"status": "CropGuard AI real model running"}
 
 def fake_heatmap():
     heatmap = np.random.rand(224, 224)
@@ -30,17 +43,21 @@ def fake_heatmap():
 
 @app.post("/api/analyze")
 async def analyze(image: UploadFile = File(...)):
-    disease = random.choice([
-        "Leaf Blight",
-        "Powdery Mildew",
-        "Bacterial Spot"
-    ])
+    img_bytes = await image.read()
+    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    img = transform(img).unsqueeze(0)
 
-    confidence = round(random.uniform(0.75, 0.95), 2)
+    with torch.no_grad():
+        output = model(img)
+        probs = torch.softmax(output, dim=1)
 
-    if confidence >= 0.88:
+    confidence = float(torch.max(probs))
+    pred_index = int(torch.argmax(probs)) % len(classes)
+    disease = classes[pred_index]
+
+    if confidence > 0.85:
         severity = "High"
-    elif confidence >= 0.82:
+    elif confidence > 0.75:
         severity = "Medium"
     else:
         severity = "Low"
