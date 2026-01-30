@@ -1,9 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import random
+import base64
+import cv2
+import numpy as np
 
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,6 +18,14 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"status": "CropGuard AI backend running"}
+
+
+def fake_heatmap():
+    heatmap = np.random.rand(224, 224)
+    heatmap = np.uint8(255 * heatmap)
+    heatmap_color = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+    _, buffer = cv2.imencode(".png", heatmap_color)
+    return base64.b64encode(buffer).decode("utf-8")
 
 
 @app.post("/api/analyze")
@@ -69,6 +79,8 @@ async def analyze(image: UploadFile = File(...)):
         "Confidence score crossed risk evaluation threshold"
     ]
 
+    heatmap_base64 = fake_heatmap()
+
     return {
         "analysis": {
             "disease": disease,
@@ -79,10 +91,10 @@ async def analyze(image: UploadFile = File(...)):
             "recommendation": recommendation,
             "key_risk_factors": key_risk_factors,
             "decision_explanation": decision_explanation,
-            "ai_version": "v1.3"
+            "heatmap": heatmap_base64,
+            "ai_version": "v1.4-explainable"
         }
     }
-
 
 
 @app.get("/api/pest-recommendations")
@@ -142,9 +154,8 @@ async def pest_recommendations(payload: dict):
             "disease": disease,
             "severity": severity
         },
-        "ai_version": "v1.3"
+        "ai_version": "v1.4-explainable"
     }
-
 
 
 @app.post("/api/local-agro-stores")
@@ -181,5 +192,5 @@ async def local_agro_stores(payload: dict):
     return {
         "store_suggestions": stores,
         "location_used": location,
-        "ai_version": "v1.3"
+        "ai_version": "v1.4-explainable"
     }
