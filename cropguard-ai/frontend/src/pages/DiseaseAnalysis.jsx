@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
@@ -10,6 +10,10 @@ function DiseaseAnalysis() {
 
   const [showActions, setShowActions] = useState(true);
   const [showExplain, setShowExplain] = useState(false);
+
+  const [heatmap, setHeatmap] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [opacity, setOpacity] = useState(0.6);
 
   if (!stored) return null;
 
@@ -25,9 +29,12 @@ function DiseaseAnalysis() {
     decision_explanation,
   } = analysis;
 
-  /* ===============================
-     VISUAL HELPERS (EXISTING)
-  =============================== */
+  useEffect(() => {
+    if (analysis.heatmap) {
+      setHeatmap(analysis.heatmap);
+    }
+  }, [analysis]);
+
   const riskColor =
     risk_level === "High"
       ? "#DC2626"
@@ -42,9 +49,6 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  /* ===============================
-     LEARNING BEHAVIOUR – STEP 1
-  =============================== */
   const sameDiseaseCount = history.filter(
     (item) => item.analysis?.disease === disease
   ).length;
@@ -56,11 +60,11 @@ function DiseaseAnalysis() {
   if (sameDiseaseCount >= 2 && sameDiseaseCount <= 3) {
     learningLevel = "Warning";
     learningMessage =
-      "Repeated occurrences detected. AI is learning a recurring disease pattern based on past analyses.";
+      "Repeated occurrences detected. AI is learning a recurring disease pattern.";
   } else if (sameDiseaseCount >= 4) {
     learningLevel = "Critical";
     learningMessage =
-      "Critical recurring pattern detected. AI has escalated risk using historical disease trends.";
+      "Critical recurring pattern detected. AI escalated risk from historical data.";
   }
 
   const learningColor =
@@ -70,11 +74,8 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  /* =============================== */
-
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -86,9 +87,44 @@ function DiseaseAnalysis() {
         <div style={styles.card}>
           <h2 style={styles.heading}>Disease Analysis</h2>
 
-          <img src={imagePreview} alt="Crop" style={styles.image} />
+          {heatmap && (
+            <div style={styles.heatmapBox}>
+              <h4 style={styles.heatmapTitle}>AI Vision Overlay</h4>
 
-          {/* VISUAL INDICATORS */}
+              <div style={styles.toggleRow}>
+                <button
+                  style={styles.toggleBtn}
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                >
+                  {showHeatmap ? "Hide AI Overlay" : "Show AI Overlay"}
+                </button>
+
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={opacity}
+                  onChange={(e) => setOpacity(e.target.value)}
+                />
+              </div>
+
+              <div style={styles.imageCompare}>
+                <img src={imagePreview} style={styles.baseImage} />
+
+                {showHeatmap && (
+                  <img
+                    src={`data:image/png;base64,${heatmap}`}
+                    style={{
+                      ...styles.overlayImage,
+                      opacity: opacity,
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           <div style={styles.badgeRow}>
             <span
               style={{
@@ -133,7 +169,6 @@ function DiseaseAnalysis() {
             {recommendation}
           </div>
 
-          {/* ===== LEARNING INSIGHT (NEW) ===== */}
           <div
             style={{
               ...styles.learningBox,
@@ -141,12 +176,9 @@ function DiseaseAnalysis() {
             }}
           >
             <strong>AI Learning Insight</strong>
-            <p style={{ marginTop: "6px" }}>
-              {learningMessage}
-            </p>
+            <p style={{ marginTop: "6px" }}>{learningMessage}</p>
           </div>
 
-          {/* WHY OPTION */}
           <div style={styles.whyRow}>
             <span style={styles.whyText}>
               Why was this disease detected?
@@ -159,7 +191,6 @@ function DiseaseAnalysis() {
             </button>
           </div>
 
-          {/* SMART TREATMENT */}
           <div style={styles.actionSection}>
             <h3
               style={styles.actionHeading}
@@ -183,7 +214,6 @@ function DiseaseAnalysis() {
         </div>
       </div>
 
-      {/* EXPLAINABLE AI OVERLAY */}
       {showExplain && (
         <div style={styles.overlay}>
           <div style={styles.explainCard}>
@@ -222,69 +252,72 @@ function DiseaseAnalysis() {
   );
 }
 
-/* ---------- STYLES (ADDITIVE ONLY) ---------- */
-
 const styles = {
   page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
   header: { backgroundColor: "#142C52", padding: "14px 32px" },
   brand: { display: "flex", alignItems: "center", gap: "12px" },
-  logo: {
-    height: "36px",
-    backgroundColor: "#ffffff",
-    padding: "6px",
-    borderRadius: "8px",
-  },
+  logo: { height: "36px", backgroundColor: "#fff", padding: "6px", borderRadius: "8px" },
   brandText: { color: "#1B9AAA", margin: 0 },
 
   center: { display: "flex", justifyContent: "center", paddingTop: "80px" },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     padding: "40px",
     borderRadius: "18px",
     width: "520px",
     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
   },
-  heading: {
+
+  heading: { textAlign: "center", color: "#142C52", marginBottom: "20px" },
+
+  heatmapBox: {
+    marginBottom: "22px",
+    backgroundColor: "#F9FAFB",
+    padding: "16px",
+    borderRadius: "14px",
     textAlign: "center",
-    color: "#142C52",
-    marginBottom: "20px",
-  },
-  image: {
-    width: "100%",
-    borderRadius: "12px",
-    marginBottom: "18px",
   },
 
-  badgeRow: {
+  heatmapTitle: { marginBottom: "10px", color: "#142C52", fontWeight: "600" },
+
+  toggleRow: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "14px",
+    marginBottom: "12px",
+    gap: "12px",
   },
-  riskBadge: {
-    color: "#ffffff",
+
+  toggleBtn: {
+    backgroundColor: "#1B9AAA",
+    color: "#fff",
+    border: "none",
     padding: "6px 12px",
-    borderRadius: "20px",
-    fontSize: "13px",
-    fontWeight: "600",
+    borderRadius: "8px",
+    cursor: "pointer",
   },
+
+  imageCompare: { position: "relative", width: "100%", borderRadius: "12px", overflow: "hidden" },
+  baseImage: { width: "100%", display: "block" },
+  overlayImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    pointerEvents: "none",
+    transition: "opacity 0.3s ease",
+  },
+
+  badgeRow: { display: "flex", justifyContent: "space-between", marginBottom: "14px" },
+  riskBadge: { color: "#fff", padding: "6px 12px", borderRadius: "20px", fontWeight: "600" },
   severityText: { fontWeight: "600" },
 
   confidenceWrapper: { marginBottom: "16px" },
-  confidenceLabel: {
-    fontSize: "13px",
-    marginBottom: "6px",
-    color: "#142C52",
-  },
-  confidenceTrack: {
-    height: "8px",
-    backgroundColor: "#e5e7eb",
-    borderRadius: "6px",
-    overflow: "hidden",
-  },
-  confidenceFill: { height: "100%", transition: "width 0.4s ease" },
+  confidenceLabel: { fontSize: "13px", marginBottom: "6px" },
+  confidenceTrack: { height: "8px", backgroundColor: "#e5e7eb", borderRadius: "6px" },
+  confidenceFill: { height: "100%" },
 
-  details: { color: "#142C52", marginBottom: "12px" },
+  details: { marginBottom: "12px" },
   recommendation: {
     backgroundColor: "#E6F6F8",
     color: "#16808D",
@@ -298,42 +331,26 @@ const styles = {
     padding: "14px",
     borderRadius: "10px",
     marginBottom: "18px",
-    color: "#142C52",
   },
 
-  whyRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "20px",
-  },
-  whyText: { fontWeight: "500", color: "#142C52" },
+  whyRow: { display: "flex", justifyContent: "space-between", marginBottom: "20px" },
   whyButton: {
     backgroundColor: "#1B9AAA",
-    color: "#ffffff",
+    color: "#fff",
     border: "none",
     borderRadius: "8px",
     padding: "6px 14px",
     cursor: "pointer",
   },
 
-  actionSection: { marginTop: "10px" },
-  actionHeading: {
-    color: "#1B9AAA",
-    cursor: "pointer",
-    marginBottom: "12px",
-  },
-  actionBlock: { color: "#142C52" },
-
   button: {
     marginTop: "20px",
     width: "100%",
     padding: "14px",
     backgroundColor: "#1B9AAA",
-    color: "#ffffff",
+    color: "#fff",
     border: "none",
     borderRadius: "12px",
-    cursor: "pointer",
   },
 
   overlay: {
@@ -344,24 +361,24 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
   },
+
   explainCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     padding: "36px",
     borderRadius: "18px",
     width: "480px",
     maxHeight: "80vh",
     overflowY: "auto",
   },
-  explainHeading: { color: "#142C52", marginBottom: "16px" },
+
   closeButton: {
     marginTop: "20px",
     width: "100%",
     padding: "12px",
     backgroundColor: "#1B9AAA",
-    color: "#ffffff",
+    color: "#fff",
     border: "none",
     borderRadius: "10px",
-    cursor: "pointer",
   },
 };
 
