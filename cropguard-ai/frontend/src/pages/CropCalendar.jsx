@@ -7,6 +7,8 @@ function CropCalendar() {
   const [profile, setProfile] = useState(null);
   const [calendar, setCalendar] = useState([]);
   const [irrigation, setIrrigation] = useState([]);
+  const [weatherRisk, setWeatherRisk] = useState([]);
+  const [loadingWeather, setLoadingWeather] = useState(false);
 
   useEffect(() => {
     const storedProfile = JSON.parse(localStorage.getItem("farmerProfile"));
@@ -14,6 +16,7 @@ function CropCalendar() {
       setProfile(storedProfile);
       generateCalendar();
       generateIrrigation();
+      fetchWeatherRisk(storedProfile.location);
     }
   }, []);
 
@@ -82,6 +85,23 @@ function CropCalendar() {
     ]);
   };
 
+  const fetchWeatherRisk = async (location) => {
+    try {
+      setLoadingWeather(true);
+      const res = await fetch("http://localhost:5000/api/weather-risk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location }),
+      });
+      const data = await res.json();
+      setWeatherRisk(data.forecast || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingWeather(false);
+    }
+  };
+
   return (
     <div style={styles.page}>
       <header style={styles.header}>
@@ -101,6 +121,34 @@ function CropCalendar() {
             <p><strong>Location:</strong> {profile.location}</p>
           </div>
         )}
+
+        <h3 style={styles.sectionTitle}>
+          7-Day Weather & Environmental Risk Outlook
+        </h3>
+
+        {loadingWeather && <p>Loading weather insights...</p>}
+
+        <div style={styles.grid}>
+          {weatherRisk.map((day, i) => (
+            <div key={i} style={styles.card}>
+              <h4>{day.date}</h4>
+              <p>🌡 {day.temp}°C</p>
+              <p>💧 Humidity: {day.humidity}%</p>
+              <p>🌧 Rain: {day.rainChance}%</p>
+
+              <span
+                style={{
+                  ...styles.badge,
+                  backgroundColor: riskColor(day.risk),
+                }}
+              >
+                Risk: {day.risk}
+              </span>
+
+              <p style={styles.note}>{day.insight}</p>
+            </div>
+          ))}
+        </div>
 
         <h3 style={styles.sectionTitle}>Disease & Pest Risk Calendar</h3>
 
