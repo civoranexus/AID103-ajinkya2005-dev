@@ -4,6 +4,11 @@ import random
 import base64
 import cv2
 import numpy as np
+import torch
+import io
+import requests
+from PIL import Image
+from torchvision import models, transforms
 
 app = FastAPI()
 
@@ -13,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+OPENWEATHER_API_KEY = "c0232e9d9f1fc28d945cb75ae2b4a586"
 
 model = models.mobilenet_v2(weights="DEFAULT")
 model.eval()
@@ -39,7 +46,6 @@ def fake_heatmap():
     heatmap_color = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
     _, buffer = cv2.imencode(".png", heatmap_color)
     return base64.b64encode(buffer).decode("utf-8")
-
 
 @app.post("/api/analyze")
 async def analyze(image: UploadFile = File(...)):
@@ -84,18 +90,6 @@ async def analyze(image: UploadFile = File(...)):
             "Continue regular crop monitoring."
         )
 
-    key_risk_factors = [
-        "High humidity conditions detected",
-        "Crop at early vegetative growth stage",
-        "Dense crop spacing increasing moisture retention"
-    ]
-
-    decision_explanation = [
-        "Visual disease patterns strongly matched trained reference data",
-        "Environmental conditions favor disease development",
-        "Confidence score crossed risk evaluation threshold"
-    ]
-
     heatmap_base64 = fake_heatmap()
 
     return {
@@ -106,20 +100,80 @@ async def analyze(image: UploadFile = File(...)):
             "risk_level": risk_level,
             "action_priority": action_priority,
             "recommendation": recommendation,
-            "key_risk_factors": key_risk_factors,
-            "decision_explanation": decision_explanation,
             "heatmap": heatmap_base64,
             "ai_version": "v1.4-explainable"
         }
     }
 
+@app.post("/api/weather-risk")
+async def weather_risk(payload: dict):
+    location = payload.get("location", "India")
+    growth_stage = payload.get("growth_stage", "Vegetative")
 
-@app.get("/api/pest-recommendations")
-def pest_recommendations_info():
+    geo = requests.get(
+        "http://api.openweathermap.org/geo/1.0/direct",
+        params={
+            "q": location,
+            "limit": 1,
+            "appid": OPENWEATHER_API_KEY
+        }
+    ).json()
+
+    if not geo:
+        return {"error": "Location not found"}
+
+    lat = geo[0]["lat"]
+    lon = geo[0]["lon"]
+
+    weather = requests.get(
+        "https://api.openweathermap.org/data/2.5/forecast",
+        params={
+            "lat": lat,
+            "lon": lon,
+            "appid": OPENWEATHER_API_KEY,
+            "units": "metric"
+        }
+    ).json()
+
+    temps = []
+    humidity = []
+    rain_prob = []
+
+    for item in weather["list"][:56]:
+        temps.append(item["main"]["temp"])
+        humidity.append(item["main"]["humidity"])
+        rain_prob.append(item.get("pop", 0))
+
+    avg_temp = round(sum(temps) / len(temps), 1)
+    avg_humidity = round(sum(humidity) / len(humidity))
+    avg_rain = round(sum(rain_prob) / len(rain_prob) * 100)
+
+    risk = "Low"
+    reasons = []
+
+    if avg_humidity > 70:
+        reasons.append("High humidity favors fungal disease growth")
+    if avg_rain > 50:
+        reasons.append("Rainfall increases leaf wetness duration")
+    if growth_stage.lower() in ["vegetative", "flowering"]:
+        reasons.append("Current crop stage is disease sensitive")
+
+    if len(reasons) >= 2:
+        risk = "High"
+    elif len(reasons) == 1:
+        risk = "Moderate"
+
     return {
-        "message": "Use POST with disease and severity context."
+        "location": location,
+        "7_day_weather": {
+            "avg_temperature": avg_temp,
+            "avg_humidity": avg_humidity,
+            "rainfall_probability": avg_rain
+        },
+        "environment_risk": risk,
+        "risk_reasons": reasons,
+        "ai_version": "v1.5-weather-fusion"
     }
-
 
 @app.post("/api/pest-recommendations")
 async def pest_recommendations(payload: dict):
@@ -132,48 +186,27 @@ async def pest_recommendations(payload: dict):
         pests.append({
             "name": "Aphids",
             "risk": "Medium",
-            "reason": "Sap-feeding pests commonly increase in leaf blight conditions",
-            "control": "Neem oil spray or biological predators",
-            "buy_link": "https://www.amazon.in/s?k=neem+oil+agriculture"
+            "control": "Neem oil spray"
         })
 
     if disease == "Powdery Mildew":
         pests.append({
             "name": "Whiteflies",
             "risk": "Medium",
-            "reason": "Powdery mildew weakens leaves, attracting whiteflies",
-            "control": "Sticky traps and organic insecticides",
-            "buy_link": "https://www.amazon.in/s?k=whitefly+trap"
-        })
-
-    if disease == "Bacterial Spot":
-        pests.append({
-            "name": "Thrips",
-            "risk": "High",
-            "reason": "Thrips accelerate bacterial spread on damaged tissues",
-            "control": "Recommended insecticide and crop sanitation",
-            "buy_link": "https://www.amazon.in/s?k=thrips+pesticide"
+            "control": "Sticky traps"
         })
 
     if severity == "High":
         pests.append({
             "name": "Cutworms",
             "risk": "High",
-            "reason": "Severe crop stress increases vulnerability to soil pests",
-            "control": "Soil treatment and pheromone traps",
-            "buy_link": "https://www.amazon.in/s?k=cutworm+control"
+            "control": "Soil treatment"
         })
 
     return {
         "detected_pests": pests,
-        "pest_count": len(pests),
-        "context_used": {
-            "disease": disease,
-            "severity": severity
-        },
         "ai_version": "v1.4-explainable"
     }
-
 
 @app.post("/api/local-agro-stores")
 async def local_agro_stores(payload: dict):
@@ -183,31 +216,13 @@ async def local_agro_stores(payload: dict):
     stores = []
 
     for pest in pests:
-        control = pest.get("control", "").lower()
-
-        if "neem" in control or "organic" in control:
-            stores.append({
-                "store_type": "Organic Agro Store",
-                "recommended_for": pest["name"],
-                "search_link": f"https://www.google.com/maps/search/organic+agro+store+near+{location}"
-            })
-
-        if "insecticide" in control or "pesticide" in control:
-            stores.append({
-                "store_type": "Agro Chemical Store",
-                "recommended_for": pest["name"],
-                "search_link": f"https://www.google.com/maps/search/agro+chemical+store+near+{location}"
-            })
-
-        if "trap" in control:
-            stores.append({
-                "store_type": "Agro Equipment Store",
-                "recommended_for": pest["name"],
-                "search_link": f"https://www.google.com/maps/search/agro+equipment+store+near+{location}"
-            })
+        stores.append({
+            "store_type": "Agro Store",
+            "recommended_for": pest["name"],
+            "search_link": f"https://www.google.com/maps/search/agro+store+near+{location}"
+        })
 
     return {
         "store_suggestions": stores,
-        "location_used": location,
         "ai_version": "v1.4-explainable"
     }
