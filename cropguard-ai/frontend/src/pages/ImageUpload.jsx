@@ -10,19 +10,36 @@ function ImageUpload() {
     const file = e.target.files[0];
     if (!file) return;
 
+    const farmerProfile = JSON.parse(
+      localStorage.getItem("farmerProfile")
+    );
+
+    if (!farmerProfile) {
+      alert("Please complete farmer registration first");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("image", file);
 
-      // ---- CALL BACKEND ----
-      const res = await fetch("http://127.0.0.1:5000/api/analyze", {
-        method: "POST",
-        body: formData,
-      });
+      formData.append("location", farmerProfile.location);
+      formData.append("growthStage", farmerProfile.growthStage);
+      formData.append(
+        "cultivationType",
+        farmerProfile.cultivationType
+      );
+
+      const res = await fetch(
+        "http://127.0.0.1:5000/api/analyze",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await res.json();
 
-      // ---- IMAGE PREVIEW ----
       const preview = URL.createObjectURL(file);
 
       const analysisRecord = {
@@ -32,15 +49,14 @@ function ImageUpload() {
         analysis: data.analysis,
       };
 
-      // ---- SAVE LAST ANALYSIS ----
       localStorage.setItem(
         "lastAnalysis",
         JSON.stringify(analysisRecord)
       );
 
-      // ---- SAVE HISTORY ----
       const history =
-        JSON.parse(localStorage.getItem("analysisHistory")) || [];
+        JSON.parse(localStorage.getItem("analysisHistory")) ||
+        [];
 
       history.push(analysisRecord);
 
@@ -49,21 +65,19 @@ function ImageUpload() {
         JSON.stringify(history)
       );
 
-      // ---- SUCCESS ----
       setSuccess(true);
 
       setTimeout(() => {
-        navigate("/home");
-      }, 1500);
-
+        navigate("/analysis");
+      }, 1200);
     } catch (error) {
       console.error("Upload failed:", error);
+      alert("Image upload failed");
     }
   };
 
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -71,7 +85,6 @@ function ImageUpload() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div style={styles.center}>
         <div style={styles.card}>
           <h2 style={styles.heading}>Image-Based Detection</h2>
@@ -89,7 +102,9 @@ function ImageUpload() {
 
           {success && (
             <div style={styles.success}>
-              Image uploaded successfully. Redirecting to Home...
+              Image uploaded successfully.
+              <br />
+              AI is analyzing farm context...
             </div>
           )}
         </div>
@@ -99,29 +114,16 @@ function ImageUpload() {
 }
 
 const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
-  },
-  header: {
-    backgroundColor: "#142C52",
-    padding: "14px 32px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
+  page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
+  header: { backgroundColor: "#142C52", padding: "14px 32px" },
+  brand: { display: "flex", alignItems: "center", gap: "12px" },
   logo: {
     height: "36px",
     backgroundColor: "#ffffff",
     padding: "6px",
     borderRadius: "8px",
   },
-  brandText: {
-    color: "#1B9AAA",
-    margin: 0,
-  },
+  brandText: { color: "#1B9AAA", margin: 0 },
   center: {
     display: "flex",
     justifyContent: "center",
@@ -136,10 +138,7 @@ const styles = {
     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
     textAlign: "center",
   },
-  heading: {
-    color: "#142C52",
-    marginBottom: "30px",
-  },
+  heading: { color: "#142C52", marginBottom: "30px" },
   uploadBox: {
     display: "block",
     padding: "16px",
