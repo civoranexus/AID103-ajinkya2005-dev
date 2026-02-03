@@ -22,6 +22,8 @@ function Register() {
     cropType: "",
     cropInfo: "",
     plantationDate: "",
+    farmSize: "",
+    cultivationType: "",
   });
 
   const totalFields = Object.keys(formData).length;
@@ -35,15 +37,38 @@ function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const calculateGrowthStage = (plantationDate) => {
+    const planted = new Date(plantationDate);
+    const today = new Date();
+    const diffDays = Math.floor(
+      (today - planted) / (1000 * 60 * 60 * 24)
+    );
+
+    let stage = "Seedling";
+    if (diffDays > 14 && diffDays <= 45) stage = "Vegetative";
+    else if (diffDays > 45 && diffDays <= 75) stage = "Flowering";
+    else if (diffDays > 75) stage = "Maturity";
+
+    return { cropAgeDays: diffDays, growthStage: stage };
+  };
+
   const handleRegister = () => {
     if (!isComplete) return;
-    localStorage.setItem("farmerProfile", JSON.stringify(formData));
+
+    const growthData = calculateGrowthStage(formData.plantationDate);
+
+    const finalProfile = {
+      ...formData,
+      ...growthData,
+      registeredAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem("farmerProfile", JSON.stringify(finalProfile));
     navigate("/home");
   };
 
   return (
     <div style={styles.page}>
-      {/* HEADER */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -51,16 +76,12 @@ function Register() {
         </div>
       </header>
 
-      {/* FORM */}
       <div style={styles.center}>
         <div style={styles.card}>
           <h2 style={styles.heading}>Farmer Registration</h2>
 
-          {/* PROGRESS BAR */}
           <div style={styles.progressTrack}>
-            <div
-              style={{ ...styles.progressFill, width: `${progress}%` }}
-            />
+            <div style={{ ...styles.progressFill, width: `${progress}%` }} />
           </div>
           <p style={styles.progressText}>{progress}% completed</p>
 
@@ -80,7 +101,6 @@ function Register() {
             style={styles.input}
           />
 
-          {/* CROP CATEGORY */}
           <select
             name="cropCategory"
             value={formData.cropCategory}
@@ -99,7 +119,6 @@ function Register() {
             ))}
           </select>
 
-          {/* CROP TYPE */}
           {formData.cropCategory && (
             <select
               name="cropType"
@@ -114,18 +133,16 @@ function Register() {
             </select>
           )}
 
-          {/* ADDITIONAL INFO */}
           {formData.cropType && (
             <textarea
               name="cropInfo"
-              placeholder="Additional crop information (variety, irrigation, soil type)"
+              placeholder="Additional crop information"
               value={formData.cropInfo}
               onChange={handleChange}
               style={styles.textarea}
             />
           )}
 
-          {/* PLANTATION DATE */}
           <input
             type="date"
             name="plantationDate"
@@ -133,6 +150,30 @@ function Register() {
             onChange={handleChange}
             style={styles.input}
           />
+
+          <select
+            name="farmSize"
+            value={formData.farmSize}
+            onChange={handleChange}
+            style={styles.input}
+          >
+            <option value="">Farm Size</option>
+            <option value="Small">Small (≤ 2 acres)</option>
+            <option value="Medium">Medium (2–5 acres)</option>
+            <option value="Large">Large (5+ acres)</option>
+          </select>
+
+          <select
+            name="cultivationType"
+            value={formData.cultivationType}
+            onChange={handleChange}
+            style={styles.input}
+          >
+            <option value="">Cultivation Type</option>
+            <option value="Open Field">Open Field</option>
+            <option value="Greenhouse">Greenhouse</option>
+            <option value="Polyhouse">Polyhouse</option>
+          </select>
 
           <button
             disabled={!isComplete}
@@ -151,49 +192,26 @@ function Register() {
   );
 }
 
-/* ---------- STYLES ---------- */
-
 const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
-  },
-  header: {
-    backgroundColor: "#142C52",
-    padding: "14px 32px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
+  page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
+  header: { backgroundColor: "#142C52", padding: "14px 32px" },
+  brand: { display: "flex", alignItems: "center", gap: "12px" },
   logo: {
     height: "36px",
     backgroundColor: "#ffffff",
     padding: "6px",
     borderRadius: "8px",
   },
-  brandText: {
-    color: "#1B9AAA",
-    margin: 0,
-  },
-  center: {
-    display: "flex",
-    justifyContent: "center",
-    paddingTop: "70px",
-  },
+  brandText: { color: "#1B9AAA", margin: 0 },
+  center: { display: "flex", justifyContent: "center", paddingTop: "70px" },
   card: {
     backgroundColor: "#ffffff",
     padding: "40px",
     borderRadius: "18px",
-    width: "460px",
+    width: "480px",
     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
   },
-  heading: {
-    textAlign: "center",
-    color: "#142C52",
-    marginBottom: "20px",
-  },
+  heading: { textAlign: "center", color: "#142C52", marginBottom: "20px" },
   progressTrack: {
     height: "8px",
     backgroundColor: "#e0e0e0",
@@ -201,11 +219,7 @@ const styles = {
     overflow: "hidden",
     marginBottom: "6px",
   },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#22C55E",
-    transition: "width 0.3s",
-  },
+  progressFill: { height: "100%", backgroundColor: "#22C55E" },
   progressText: {
     fontSize: "13px",
     color: "#16808D",
