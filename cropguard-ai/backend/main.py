@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import random
 import base64
@@ -38,7 +38,8 @@ transform = transforms.Compose([
 
 @app.get("/")
 def root():
-    return {"status": "CropGuard AI real model running"}
+    return {"status": "CropGuard AI context-aware engine running"}
+
 
 def fake_heatmap():
     heatmap = np.random.rand(224, 224)
@@ -47,8 +48,63 @@ def fake_heatmap():
     _, buffer = cv2.imencode(".png", heatmap_color)
     return base64.b64encode(buffer).decode("utf-8")
 
+
+def fetch_weather_risk(location, growth_stage):
+    geo = requests.get(
+        "http://api.openweathermap.org/geo/1.0/direct",
+        params={"q": location, "limit": 1, "appid": OPENWEATHER_API_KEY},
+    ).json()
+
+    if not geo:
+        return "Low", []
+
+    lat, lon = geo[0]["lat"], geo[0]["lon"]
+
+    weather = requests.get(
+        "https://api.openweathermap.org/data/2.5/forecast",
+        params={"lat": lat, "lon": lon, "appid": OPENWEATHER_API_KEY, "units": "metric"},
+    ).json()
+
+    humidity = []
+    rain = []
+
+    for item in weather["list"][:56]:
+        humidity.append(item["main"]["humidity"])
+        rain.append(item.get("pop", 0))
+
+    avg_humidity = sum(humidity) / len(humidity)
+    avg_rain = sum(rain) / len(rain)
+
+    reasons = []
+    risk_score = 0
+
+    if avg_humidity > 70:
+        risk_score += 0.05
+        reasons.append("High humidity increases fungal infection probability")
+
+    if avg_rain > 0.5:
+        risk_score += 0.05
+        reasons.append("Frequent rainfall increases leaf wetness duration")
+
+    if growth_stage in ["Vegetative", "Flowering"]:
+        risk_score += 0.04
+        reasons.append("Current crop stage is disease-sensitive")
+
+    if risk_score >= 0.09:
+        return "High", reasons
+    elif risk_score >= 0.05:
+        return "Moderate", reasons
+    else:
+        return "Low", reasons
+
+
 @app.post("/api/analyze")
-async def analyze(image: UploadFile = File(...)):
+async def analyze(
+    image: UploadFile = File(...),
+    location: str = Form("India"),
+    growthStage: str = Form("Vegetative"),
+    cultivationType: str = Form("Open Field"),
+):
     img_bytes = await image.read()
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
     img = transform(img).unsqueeze(0)
@@ -57,123 +113,73 @@ async def analyze(image: UploadFile = File(...)):
         output = model(img)
         probs = torch.softmax(output, dim=1)
 
-    confidence = float(torch.max(probs))
+    base_confidence = float(torch.max(probs))
     pred_index = int(torch.argmax(probs)) % len(classes)
     disease = classes[pred_index]
 
-    if confidence > 0.85:
-        severity = "High"
-    elif confidence > 0.75:
-        severity = "Medium"
-    else:
-        severity = "Low"
+    severity_score = base_confidence
+    ai_reasoning = []
 
-    if severity == "High":
+    weather_risk, weather_reasons = fetch_weather_risk(location, growthStage)
+    ai_reasoning.extend(weather_reasons)
+
+    if weather_risk == "High":
+        severity_score += 0.07
+    elif weather_risk == "Moderate":
+        severity_score += 0.04
+
+    if cultivationType == "Open Field":
+        severity_score += 0.05
+        ai_reasoning.append("Open field cultivation increases exposure risk")
+    elif cultivationType == "Greenhouse":
+        severity_score -= 0.05
+        ai_reasoning.append("Greenhouse cultivation reduces environmental exposure")
+
+    severity_score = min(severity_score, 0.99)
+
+    if severity_score >= 0.88:
+        severity = "High"
         risk_level = "High"
         action_priority = "Immediate"
-        recommendation = (
-            "Immediate intervention required. "
-            "Apply recommended fungicide and isolate affected crop areas."
-        )
-    elif severity == "Medium":
+    elif severity_score >= 0.80:
+        severity = "Medium"
         risk_level = "Moderate"
         action_priority = "Monitor Closely"
-        recommendation = (
-            "Preventive treatment advised. "
-            "Monitor crop condition over the next few days."
-        )
     else:
+        severity = "Low"
         risk_level = "Low"
         action_priority = "Routine Monitoring"
-        recommendation = (
-            "No immediate treatment required. "
-            "Continue regular crop monitoring."
-        )
 
-    heatmap_base64 = fake_heatmap()
+    recommendation = (
+        "Apply appropriate fungicide and isolate affected areas"
+        if severity == "High"
+        else "Monitor crop condition and apply preventive measures"
+        if severity == "Medium"
+        else "Continue regular monitoring"
+    )
+
+    heatmap = fake_heatmap()
 
     return {
         "analysis": {
             "disease": disease,
             "severity": severity,
-            "confidence": confidence,
+            "confidence": round(severity_score, 2),
             "risk_level": risk_level,
             "action_priority": action_priority,
             "recommendation": recommendation,
-            "heatmap": heatmap_base64,
-            "ai_version": "v1.4-explainable"
+            "ai_reasoning": ai_reasoning,
+            "farm_context": {
+                "location": location,
+                "growthStage": growthStage,
+                "cultivationType": cultivationType,
+                "weatherRisk": weather_risk,
+            },
+            "heatmap": heatmap,
+            "ai_version": "v1.6-weather-context-fusion",
         }
     }
 
-@app.post("/api/weather-risk")
-async def weather_risk(payload: dict):
-    location = payload.get("location", "India")
-    growth_stage = payload.get("growth_stage", "Vegetative")
-
-    geo = requests.get(
-        "http://api.openweathermap.org/geo/1.0/direct",
-        params={
-            "q": location,
-            "limit": 1,
-            "appid": OPENWEATHER_API_KEY
-        }
-    ).json()
-
-    if not geo:
-        return {"error": "Location not found"}
-
-    lat = geo[0]["lat"]
-    lon = geo[0]["lon"]
-
-    weather = requests.get(
-        "https://api.openweathermap.org/data/2.5/forecast",
-        params={
-            "lat": lat,
-            "lon": lon,
-            "appid": OPENWEATHER_API_KEY,
-            "units": "metric"
-        }
-    ).json()
-
-    temps = []
-    humidity = []
-    rain_prob = []
-
-    for item in weather["list"][:56]:
-        temps.append(item["main"]["temp"])
-        humidity.append(item["main"]["humidity"])
-        rain_prob.append(item.get("pop", 0))
-
-    avg_temp = round(sum(temps) / len(temps), 1)
-    avg_humidity = round(sum(humidity) / len(humidity))
-    avg_rain = round(sum(rain_prob) / len(rain_prob) * 100)
-
-    risk = "Low"
-    reasons = []
-
-    if avg_humidity > 70:
-        reasons.append("High humidity favors fungal disease growth")
-    if avg_rain > 50:
-        reasons.append("Rainfall increases leaf wetness duration")
-    if growth_stage.lower() in ["vegetative", "flowering"]:
-        reasons.append("Current crop stage is disease sensitive")
-
-    if len(reasons) >= 2:
-        risk = "High"
-    elif len(reasons) == 1:
-        risk = "Moderate"
-
-    return {
-        "location": location,
-        "7_day_weather": {
-            "avg_temperature": avg_temp,
-            "avg_humidity": avg_humidity,
-            "rainfall_probability": avg_rain
-        },
-        "environment_risk": risk,
-        "risk_reasons": reasons,
-        "ai_version": "v1.5-weather-fusion"
-    }
 
 @app.post("/api/pest-recommendations")
 async def pest_recommendations(payload: dict):
@@ -183,46 +189,35 @@ async def pest_recommendations(payload: dict):
     pests = []
 
     if disease == "Leaf Blight":
-        pests.append({
-            "name": "Aphids",
-            "risk": "Medium",
-            "control": "Neem oil spray"
-        })
+        pests.append({"name": "Aphids", "risk": "Medium", "control": "Neem oil spray"})
 
     if disease == "Powdery Mildew":
-        pests.append({
-            "name": "Whiteflies",
-            "risk": "Medium",
-            "control": "Sticky traps"
-        })
+        pests.append({"name": "Whiteflies", "risk": "Medium", "control": "Sticky traps"})
 
     if severity == "High":
-        pests.append({
-            "name": "Cutworms",
-            "risk": "High",
-            "control": "Soil treatment"
-        })
+        pests.append({"name": "Cutworms", "risk": "High", "control": "Soil treatment"})
 
     return {
         "detected_pests": pests,
-        "ai_version": "v1.4-explainable"
+        "ai_version": "v1.6-weather-context-fusion",
     }
+
 
 @app.post("/api/local-agro-stores")
 async def local_agro_stores(payload: dict):
     location = payload.get("location", "India")
     pests = payload.get("pests", [])
 
-    stores = []
-
-    for pest in pests:
-        stores.append({
+    stores = [
+        {
             "store_type": "Agro Store",
             "recommended_for": pest["name"],
-            "search_link": f"https://www.google.com/maps/search/agro+store+near+{location}"
-        })
+            "search_link": f"https://www.google.com/maps/search/agro+store+near+{location}",
+        }
+        for pest in pests
+    ]
 
     return {
         "store_suggestions": stores,
-        "ai_version": "v1.4-explainable"
+        "ai_version": "v1.6-weather-context-fusion",
     }
