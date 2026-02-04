@@ -158,42 +158,52 @@ const styles = {
     minHeight: "100vh",
     backgroundColor: "#f4f6f8",
   },
+
   header: {
     backgroundColor: "#142C52",
-    padding: "14px 32px",
+    padding: "14px 16px",
   },
+
   brand: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
   },
+
   logo: {
     height: "36px",
     backgroundColor: "#ffffff",
     padding: "6px",
     borderRadius: "8px",
   },
+
   brandText: {
     color: "#1B9AAA",
     margin: 0,
   },
+
   center: {
     display: "flex",
     justifyContent: "center",
-    paddingTop: "70px",
+    padding: "60px 16px",
   },
+
   card: {
     backgroundColor: "#ffffff",
-    padding: "40px",
+    padding: "32px 24px",
     borderRadius: "18px",
-    width: "460px",
+    width: "100%",
+    maxWidth: "460px",
     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
   },
+
   heading: {
     textAlign: "center",
     color: "#142C52",
     marginBottom: "20px",
+    fontSize: "22px",
   },
+
   progressTrack: {
     height: "8px",
     backgroundColor: "#e0e0e0",
@@ -201,33 +211,42 @@ const styles = {
     overflow: "hidden",
     marginBottom: "6px",
   },
+
   progressFill: {
     height: "100%",
     backgroundColor: "#22C55E",
-    transition: "width 0.3s",
+    transition: "width 0.3s ease",
   },
+
   progressText: {
     fontSize: "13px",
     color: "#16808D",
     marginBottom: "16px",
     textAlign: "right",
   },
+
   input: {
     width: "100%",
-    padding: "12px",
+    padding: "12px 14px",
     marginBottom: "14px",
     borderRadius: "10px",
     border: "1px solid #ccc",
+    fontSize: "14px",
+    outline: "none",
   },
+
   textarea: {
     width: "100%",
-    padding: "12px",
+    padding: "12px 14px",
     marginBottom: "14px",
     borderRadius: "10px",
     border: "1px solid #ccc",
-    minHeight: "70px",
+    minHeight: "80px",
     resize: "none",
+    fontSize: "14px",
+    outline: "none",
   },
+
   button: {
     width: "100%",
     padding: "14px",
@@ -236,6 +255,8 @@ const styles = {
     border: "none",
     borderRadius: "12px",
     fontWeight: "600",
+    fontSize: "15px",
+    cursor: "pointer",
   },
 };
 
