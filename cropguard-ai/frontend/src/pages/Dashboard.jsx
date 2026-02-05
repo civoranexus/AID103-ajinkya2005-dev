@@ -25,12 +25,6 @@ function Dashboard() {
     setHistory(storedHistory);
   }, []);
 
-  const chartData = [
-    { name: "Low", value: 4 },
-    { name: "Medium", value: 6 },
-    { name: "High", value: 2 },
-  ];
-
   const getColor = (level) =>
     level === "High"
       ? "#DC2626"
@@ -38,9 +32,6 @@ function Dashboard() {
       ? "#F59E0B"
       : "#16A34A";
 
-  /* ===============================
-     LEARNING SUMMARY LOGIC
-  =============================== */
   const diseaseFrequency = {};
   history.forEach((item) => {
     const d = item.analysis?.disease;
@@ -48,8 +39,7 @@ function Dashboard() {
   });
 
   const mostFrequentDisease = Object.keys(diseaseFrequency).reduce(
-    (a, b) =>
-      diseaseFrequency[a] > diseaseFrequency[b] ? a : b,
+    (a, b) => (diseaseFrequency[a] > diseaseFrequency[b] ? a : b),
     ""
   );
 
@@ -61,16 +51,10 @@ function Dashboard() {
   else if (recurrenceCount >= 4)
     learningLevel = "Critical";
 
-  const learningColor =
-    learningLevel === "Critical"
-      ? "#DC2626"
-      : learningLevel === "Warning"
-      ? "#F59E0B"
-      : "#16A34A";
+  const learningColor = getColor(
+    learningLevel === "Normal" ? "Low" : learningLevel
+  );
 
-  /* ===============================
-     SEVERITY TREND LEARNING (NEW)
-  =============================== */
   const severityMap = { Low: 1, Medium: 2, High: 3 };
 
   let severityTrend = "Stable";
@@ -79,12 +63,9 @@ function Dashboard() {
     "Disease severity has remained stable over time.";
 
   if (history.length >= 2) {
-    const first =
-      severityMap[history[0].analysis?.severity] || 1;
+    const first = severityMap[history[0].analysis?.severity] || 1;
     const last =
-      severityMap[
-        history[history.length - 1].analysis?.severity
-      ] || 1;
+      severityMap[history[history.length - 1].analysis?.severity] || 1;
 
     if (last > first) {
       severityTrend = "Worsening";
@@ -99,7 +80,27 @@ function Dashboard() {
     }
   }
 
-  /* =============================== */
+  const dynamicChartData = [
+    {
+      name: "Low",
+      value: history.filter((h) => h.analysis?.severity === "Low").length,
+    },
+    {
+      name: "Medium",
+      value: history.filter((h) => h.analysis?.severity === "Medium").length,
+    },
+    {
+      name: "High",
+      value: history.filter((h) => h.analysis?.severity === "High").length,
+    },
+  ];
+
+  const alertMessage =
+    learningLevel === "Critical"
+      ? "Critical disease recurrence detected. Immediate intervention advised."
+      : learningLevel === "Warning"
+      ? "Repeated disease patterns observed. Monitor crop closely."
+      : "Crop health currently stable. Continue routine monitoring.";
 
   const downloadPDF = async () => {
     const element = document.getElementById("dashboard-export");
@@ -132,7 +133,15 @@ function Dashboard() {
       <div style={styles.container}>
         <h2 style={styles.heading}>Dashboard Overview</h2>
 
-        {/* OVERVIEW CARDS */}
+        <div
+          style={{
+            ...styles.alertBox,
+            borderLeft: `6px solid ${learningColor}`,
+          }}
+        >
+          {alertMessage}
+        </div>
+
         <div style={styles.cards}>
           <div style={styles.card}>
             <h4>Total Analyses</h4>
@@ -148,11 +157,10 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* CHART */}
         <div style={styles.chartCard}>
           <h4>Disease Severity Distribution</h4>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
+            <BarChart data={dynamicChartData}>
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
@@ -161,41 +169,6 @@ function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* AI LEARNING SUMMARY */}
-        {mostFrequentDisease && (
-          <div
-            style={{
-              ...styles.learningCard,
-              borderLeft: `6px solid ${learningColor}`,
-            }}
-          >
-            <h3>AI Learning Summary</h3>
-            <p>
-              <strong>{mostFrequentDisease}</strong> detected{" "}
-              <strong>{recurrenceCount}</strong> times.
-            </p>
-            <p>
-              Learning level:{" "}
-              <strong style={{ color: learningColor }}>
-                {learningLevel}
-              </strong>
-            </p>
-
-            {/* SEVERITY TREND */}
-            <p
-              style={{
-                marginTop: "10px",
-                fontWeight: "600",
-                color: severityTrendColor,
-              }}
-            >
-              Severity Trend: {severityTrend}
-            </p>
-            <p>{severityTrendMessage}</p>
-          </div>
-        )}
-
-        {/* EXPORT + VISUAL INDICATORS */}
         {analysis && (
           <div style={styles.exportSection}>
             <div style={styles.exportCard} id="dashboard-export">
@@ -228,41 +201,15 @@ function Dashboard() {
               />
 
               <p>
-                <strong>Disease:</strong>{" "}
-                {analysis.analysis.disease}
+                <strong>Disease:</strong> {analysis.analysis.disease}
               </p>
-
-              <div style={styles.confidenceBlock}>
-                <span>
-                  <strong>Confidence:</strong>{" "}
-                  {Math.round(
-                    analysis.analysis.confidence * 100
-                  )}
-                  %
-                </span>
-
-                <div style={styles.track}>
-                  <div
-                    style={{
-                      ...styles.fill,
-                      width: `${
-                        analysis.analysis.confidence * 100
-                      }%`,
-                      backgroundColor: severityColor,
-                    }}
-                  />
-                </div>
-              </div>
 
               <div style={styles.recommendation}>
                 {analysis.analysis.recommendation}
               </div>
             </div>
 
-            <button
-              style={styles.downloadBtn}
-              onClick={downloadPDF}
-            >
+            <button style={styles.downloadBtn} onClick={downloadPDF}>
               Download Latest Report (PDF)
             </button>
           </div>
@@ -286,6 +233,16 @@ const styles = {
   container: { padding: "60px 80px" },
   heading: { color: "#142C52", marginBottom: "30px" },
 
+  alertBox: {
+    backgroundColor: "#ffffff",
+    padding: "18px",
+    borderRadius: "14px",
+    marginBottom: "30px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+    color: "#142C52",
+    fontWeight: "600",
+  },
+
   cards: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
@@ -297,7 +254,6 @@ const styles = {
     padding: "24px",
     borderRadius: "16px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-    color: "#142C52",
   },
 
   chartCard: {
@@ -306,15 +262,6 @@ const styles = {
     borderRadius: "18px",
     boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
     marginBottom: "40px",
-  },
-
-  learningCard: {
-    backgroundColor: "#ffffff",
-    padding: "24px",
-    borderRadius: "16px",
-    marginBottom: "40px",
-    boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
-    color: "#142C52",
   },
 
   exportSection: { marginTop: "40px" },
@@ -339,16 +286,6 @@ const styles = {
     fontWeight: "600",
   },
   severityText: { fontWeight: "600" },
-
-  confidenceBlock: { marginTop: "10px" },
-  track: {
-    height: "8px",
-    backgroundColor: "#e5e7eb",
-    borderRadius: "6px",
-    overflow: "hidden",
-    marginTop: "4px",
-  },
-  fill: { height: "100%", transition: "width 0.3s" },
 
   image: {
     width: "100%",
