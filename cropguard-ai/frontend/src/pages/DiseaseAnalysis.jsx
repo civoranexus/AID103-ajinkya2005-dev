@@ -2,11 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
+/* ===============================
+   🔐 SAFE PARSE HELPERS (ADDITION)
+=============================== */
+const safeParse = (key, fallback) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 function DiseaseAnalysis() {
   const navigate = useNavigate();
-  const stored = JSON.parse(localStorage.getItem("lastAnalysis"));
-  const history = JSON.parse(localStorage.getItem("analysisHistory")) || [];
-  const farmerProfile = JSON.parse(localStorage.getItem("farmerProfile"));
+
+  const stored = safeParse("lastAnalysis", null);
+  const history = safeParse("analysisHistory", []);
+  const farmerProfile = safeParse("farmerProfile", null);
 
   const [showActions, setShowActions] = useState(true);
   const [showExplain, setShowExplain] = useState(false);
@@ -14,9 +27,34 @@ function DiseaseAnalysis() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [opacity, setOpacity] = useState(0.4);
 
-  if (!stored) return null;
+  /* ===============================
+     🔐 HARD GUARD (ADDITION)
+  =============================== */
+  if (!stored || !stored.analysis) {
+    return (
+      <div style={{ padding: "80px", textAlign: "center", color: "#142C52" }}>
+        <h2>No Analysis Available</h2>
+        <p>Please upload a crop image to view AI analysis.</p>
+        <button
+          style={{
+            marginTop: "20px",
+            padding: "12px 24px",
+            backgroundColor: "#1B9AAA",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+          }}
+          onClick={() => navigate("/home")}
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
   const { imagePreview, analysis } = stored;
+
   const {
     disease,
     severity,
@@ -24,8 +62,8 @@ function DiseaseAnalysis() {
     recommendation,
     risk_level,
     action_priority,
-    key_risk_factors,
-    decision_explanation,
+    key_risk_factors = [],
+    decision_explanation = [],
   } = analysis;
 
   useEffect(() => {
@@ -48,9 +86,9 @@ function DiseaseAnalysis() {
       ? "#F59E0B"
       : "#16A34A";
 
-  const sameDiseaseCount = history.filter(
-    (item) => item.analysis?.disease === disease
-  ).length;
+  const sameDiseaseCount = Array.isArray(history)
+    ? history.filter((item) => item.analysis?.disease === disease).length
+    : 0;
 
   let learningLevel = "Info";
   let learningMessage =
@@ -212,7 +250,7 @@ function DiseaseAnalysis() {
 
             <h4>Key Risk Factors</h4>
             <ul>
-              {Array.isArray(key_risk_factors)
+              {Array.isArray(key_risk_factors) && key_risk_factors.length > 0
                 ? key_risk_factors.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))
@@ -221,7 +259,7 @@ function DiseaseAnalysis() {
 
             <h4>Decision Explanation</h4>
             <ul>
-              {Array.isArray(decision_explanation)
+              {Array.isArray(decision_explanation) && decision_explanation.length > 0
                 ? decision_explanation.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))
