@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import logo from "../assets/logo.png";
 
 function Home() {
   const navigate = useNavigate();
+  const farmerProfile = JSON.parse(localStorage.getItem("activeFarmer"));
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <div style={styles.app}>
@@ -12,7 +15,7 @@ function Home() {
           <h2 style={styles.logoText}>CropGuard AI</h2>
         </div>
 
-        <nav>
+        <nav style={{ display: "flex", alignItems: "center", gap: "24px" }}>
           <ul style={styles.navList}>
             <li style={styles.navItem} onClick={() => navigate("/home")}>
               Home
@@ -27,6 +30,70 @@ function Home() {
               Dashboard
             </li>
           </ul>
+
+          {farmerProfile && (
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                style={{
+                  backgroundColor: "#1B9AAA",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                👤 {farmerProfile.fullName}
+              </button>
+
+              {showProfile && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "44px",
+                    backgroundColor: "#ffffff",
+                    padding: "16px",
+                    borderRadius: "14px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                    width: "220px",
+                    zIndex: 100,
+                    color: "#142C52",
+                  }}
+                >
+                  <p style={{ fontWeight: "600", marginBottom: "4px" }}>
+                    {farmerProfile.fullName}
+                  </p>
+                  <p style={{ fontSize: "13px", marginBottom: "10px" }}>
+                    {farmerProfile.cropType} • {farmerProfile.location}
+                  </p>
+
+                  <hr style={{ margin: "10px 0" }} />
+
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("activeFarmer");
+                      window.location.href = "/";
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      backgroundColor: "#DC2626",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </nav>
       </header>
 
@@ -58,13 +125,6 @@ function Home() {
               onClick={() => navigate("/pests")}
             >
               Pest Detection
-            </button>
-
-            <button
-              style={styles.storeBtn}
-              onClick={() => navigate("/stores")}
-            >
-              Stores
             </button>
           </div>
         </div>
@@ -164,15 +224,6 @@ const styles = {
   tertiaryBtn: {
     padding: "14px 28px",
     backgroundColor: "#142C52",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-  storeBtn: {
-    padding: "14px 28px",
-    backgroundColor: "#0f766e",
     color: "#ffffff",
     border: "none",
     borderRadius: "12px",

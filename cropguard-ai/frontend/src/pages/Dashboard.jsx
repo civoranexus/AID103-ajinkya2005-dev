@@ -12,18 +12,41 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+/* ===============================
+   🔐 SAFETY HELPER (ADDITION)
+=============================== */
+const safeJSONParse = (key, fallback) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 function Dashboard() {
   const [analysis, setAnalysis] = useState(null);
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("lastAnalysis"));
-    const storedHistory =
-      JSON.parse(localStorage.getItem("analysisHistory")) || [];
+    const stored = safeJSONParse("lastAnalysis", null);
+    const storedHistory = safeJSONParse("analysisHistory", []);
 
     if (stored) setAnalysis(stored);
-    setHistory(storedHistory);
+    setHistory(Array.isArray(storedHistory) ? storedHistory : []);
   }, []);
+
+  /* ===============================
+     🔐 RUNTIME GUARD (ADDITION)
+  =============================== */
+  if (!Array.isArray(history)) {
+    return (
+      <div style={{ padding: "60px", textAlign: "center", color: "#142C52" }}>
+        <h2>Dashboard Loading…</h2>
+        <p>Preparing analysis data safely.</p>
+      </div>
+    );
+  }
 
   const getColor = (level) =>
     level === "High"
@@ -118,8 +141,31 @@ function Dashboard() {
   };
 
   const severityColor = analysis
-    ? getColor(analysis.analysis.risk_level)
+    ? getColor(analysis.analysis?.risk_level)
     : "#16A34A";
+
+  /* ===============================
+     🔐 EMPTY STATE (ADDITION)
+  =============================== */
+  if (!analysis && history.length === 0) {
+    return (
+      <div style={styles.page}>
+        <header style={styles.header}>
+          <div style={styles.brand}>
+            <img src={logo} alt="CropGuard AI" style={styles.logo} />
+            <h2 style={styles.brandText}>CropGuard AI</h2>
+          </div>
+        </header>
+
+        <div style={{ padding: "80px", textAlign: "center", color: "#142C52" }}>
+          <h2>No Analysis Data Yet</h2>
+          <p style={{ marginTop: "10px", opacity: 0.8 }}>
+            Upload a crop image to generate AI insights and unlock the dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>

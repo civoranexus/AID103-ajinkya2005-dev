@@ -19,6 +19,39 @@ function History() {
       ? "#F59E0B"
       : "#16A34A";
 
+  /* 🔹 ADDITION: Save treatment outcome */
+  const saveOutcome = (id, outcome) => {
+    const updated = history.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            treatmentOutcome: outcome,
+            followUpDate: new Date().toLocaleDateString(),
+          }
+        : item
+    );
+
+    setHistory(updated);
+
+    const original =
+      JSON.parse(localStorage.getItem("analysisHistory")) || [];
+
+    const merged = original.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            treatmentOutcome: outcome,
+            followUpDate: new Date().toLocaleDateString(),
+          }
+        : item
+    );
+
+    localStorage.setItem(
+      "analysisHistory",
+      JSON.stringify(merged)
+    );
+  };
+
   const exportPDF = async (item) => {
     const element = document.getElementById(`report-${item.id}`);
     const canvas = await html2canvas(element, { scale: 2 });
@@ -34,7 +67,6 @@ function History() {
 
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
       <header style={styles.header}>
         <div style={styles.brand}>
           <img src={logo} alt="CropGuard AI" style={styles.logo} />
@@ -42,7 +74,6 @@ function History() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div style={styles.container}>
         <h2 style={styles.heading}>History & Reports</h2>
 
@@ -58,7 +89,6 @@ function History() {
               <div id={`report-${item.id}`} style={styles.report}>
                 <h3 style={styles.cardTitle}>Crop Disease Report</h3>
 
-                {/* VISUAL INDICATORS */}
                 <div style={styles.indicatorRow}>
                   <span
                     style={{
@@ -89,7 +119,6 @@ function History() {
 
                 <p><strong>Disease:</strong> {item.analysis.disease}</p>
 
-                {/* CONFIDENCE BAR */}
                 <div style={styles.confidenceBlock}>
                   <span>
                     <strong>Confidence:</strong>{" "}
@@ -110,6 +139,47 @@ function History() {
                 <div style={styles.recommendation}>
                   {item.analysis.recommendation}
                 </div>
+
+                {/* 🔹 ADDITION: TREATMENT EFFECTIVENESS */}
+                <div style={styles.treatmentBox}>
+                  <strong>Treatment Outcome</strong>
+
+                  {item.treatmentOutcome ? (
+                    <p>
+                      Outcome:{" "}
+                      <strong>{item.treatmentOutcome}</strong>
+                      <br />
+                      Follow-up Date: {item.followUpDate}
+                    </p>
+                  ) : (
+                    <div style={styles.outcomeBtns}>
+                      <button
+                        style={styles.goodBtn}
+                        onClick={() =>
+                          saveOutcome(item.id, "Improved")
+                        }
+                      >
+                        Improved
+                      </button>
+                      <button
+                        style={styles.warnBtn}
+                        onClick={() =>
+                          saveOutcome(item.id, "No Change")
+                        }
+                      >
+                        Same
+                      </button>
+                      <button
+                        style={styles.badBtn}
+                        onClick={() =>
+                          saveOutcome(item.id, "Worsened")
+                        }
+                      >
+                        Worsened
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button
@@ -127,39 +197,15 @@ function History() {
 }
 
 const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
-  },
-  header: {
-    backgroundColor: "#142C52",
-    padding: "14px 32px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
-  logo: {
-    height: "36px",
-    backgroundColor: "#ffffff",
-    padding: "6px",
-    borderRadius: "8px",
-  },
-  brandText: {
-    color: "#1B9AAA",
-    margin: 0,
-  },
-  container: {
-    padding: "60px 80px",
-  },
-  heading: {
-    color: "#142C52",
-    marginBottom: "30px",
-  },
-  empty: {
-    color: "#16808D",
-  },
+  page: { minHeight: "100vh", backgroundColor: "#f4f6f8" },
+  header: { backgroundColor: "#142C52", padding: "14px 32px" },
+  brand: { display: "flex", alignItems: "center", gap: "12px" },
+  logo: { height: "36px", backgroundColor: "#ffffff", padding: "6px", borderRadius: "8px" },
+  brandText: { color: "#1B9AAA", margin: 0 },
+  container: { padding: "60px 80px" },
+  heading: { color: "#142C52", marginBottom: "30px" },
+  empty: { color: "#16808D" },
+
   card: {
     backgroundColor: "#ffffff",
     borderRadius: "18px",
@@ -167,18 +213,12 @@ const styles = {
     marginBottom: "24px",
     boxShadow: "0 15px 35px rgba(0,0,0,0.08)",
   },
-  report: {
-    color: "#142C52",
-  },
-  cardTitle: {
-    marginBottom: "10px",
-  },
+  report: { color: "#142C52" },
+  cardTitle: { marginBottom: "10px" },
 
-  /* === VISUAL INDICATORS === */
   indicatorRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: "10px",
   },
   riskBadge: {
@@ -188,9 +228,7 @@ const styles = {
     fontSize: "12px",
     fontWeight: "600",
   },
-  severity: {
-    fontWeight: "600",
-  },
+  severity: { fontWeight: "600" },
 
   image: {
     width: "100%",
@@ -199,9 +237,7 @@ const styles = {
     margin: "12px 0",
   },
 
-  confidenceBlock: {
-    marginTop: "10px",
-  },
+  confidenceBlock: { marginTop: "10px" },
   track: {
     height: "8px",
     backgroundColor: "#e5e7eb",
@@ -209,10 +245,7 @@ const styles = {
     overflow: "hidden",
     marginTop: "4px",
   },
-  fill: {
-    height: "100%",
-    transition: "width 0.3s",
-  },
+  fill: { height: "100%" },
 
   recommendation: {
     marginTop: "10px",
@@ -221,6 +254,41 @@ const styles = {
     borderRadius: "10px",
     color: "#16808D",
   },
+
+  /* 🔹 ADDITION STYLES */
+  treatmentBox: {
+    marginTop: "14px",
+    backgroundColor: "#F9FAFB",
+    padding: "14px",
+    borderRadius: "10px",
+  },
+  outcomeBtns: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "10px",
+  },
+  goodBtn: {
+    backgroundColor: "#16A34A",
+    color: "#fff",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "8px",
+  },
+  warnBtn: {
+    backgroundColor: "#F59E0B",
+    color: "#fff",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "8px",
+  },
+  badBtn: {
+    backgroundColor: "#DC2626",
+    color: "#fff",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "8px",
+  },
+
   exportBtn: {
     marginTop: "16px",
     padding: "12px 18px",
